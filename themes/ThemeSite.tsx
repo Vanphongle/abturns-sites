@@ -130,6 +130,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
     { id: 'reviews', label: 'Reviews', show: site.reviews.length > 0 },
     { id: 'visit', label: 'Visit', show: true },
   ]
+  const blogHref = site.postsCount > 0 ? `${site.basePath}/blog` : null
 
   const sections: Record<SectionId, React.ReactNode> = {
     announcement: st.announcement ? (
@@ -391,8 +392,9 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
             {nav.filter((n) => n.show).map((n) => (
               <a key={n.id} href={`#${n.id}`} className={s.navLink}>{n.label}</a>
             ))}
+            {blogHref && <a href={blogHref} className={s.navLink}>Journal</a>}
             {bookHref && <a href={bookHref} className={s.cta}>{bookLabel}</a>}
-            <MobileNav links={nav.filter((n) => n.show)} bookHref={bookHref} bookLabel={bookLabel} />
+            <MobileNav links={nav.filter((n) => n.show)} blogHref={blogHref} bookHref={bookHref} bookLabel={bookLabel} />
           </nav>
         </div>
       </header>
@@ -401,11 +403,12 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
 
       <footer className={s.footer}>
         <div className={s.footerName}>{site.name}</div>
-        {(st.instagram || st.facebook || st.yelp) && (
+        {(st.instagram || st.facebook || st.yelp || blogHref) && (
           <div className={s.footerSocial}>
             {st.instagram && <a href={st.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>}
             {st.facebook && <a href={st.facebook} target="_blank" rel="noopener noreferrer">Facebook</a>}
             {st.yelp && <a href={st.yelp} target="_blank" rel="noopener noreferrer">Yelp</a>}
+            {blogHref && <a href={blogHref}>Journal</a>}
           </div>
         )}
         <div className={s.footerCopy}>© {new Date().getFullYear()} {site.name}. All rights reserved.</div>

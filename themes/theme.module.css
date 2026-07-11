@@ -535,3 +535,37 @@
 }
 .footerSocial a:hover { opacity: 1; }
 .footerCopy { font-size: 12px; opacity: 0.45; margin-top: 16px; }
+
+
+/* --- Journal (blog) ---------------------------------------------------------- */
+.postList { display: grid; gap: 18px; max-width: 760px; }
+.page[data-theme='maison'] .postList, .page[data-theme='riviera'] .postList { margin: 0 auto; }
+.postCard {
+  display: block; text-decoration: none; color: inherit;
+  border: 1px solid var(--c-hairline); border-radius: var(--radius-lg);
+  background: var(--c-surface); padding: 26px 28px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.postCard:hover { transform: translateY(-2px); box-shadow: 0 12px 32px -18px color-mix(in srgb, var(--c-ink) 35%, transparent); }
+.postDate { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: var(--c-accent); }
+.postTitle { composes: display; font-size: 24px; margin-top: 8px; }
+.postExcerpt { margin-top: 8px; font-size: 14.5px; line-height: 1.65; opacity: 0.75; }
+.postMore {
+  display: inline-block; margin-top: 14px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--c-primary); border-bottom: 1px solid var(--c-goldline); padding-bottom: 2px;
+}
+.postArticle { max-width: 720px; }
+.page[data-theme='maison'] .postArticle, .page[data-theme='riviera'] .postArticle { margin: 0 auto; }
+.postHeading { composes: display; font-size: clamp(32px, 4.6vw, 50px); line-height: 1.1; margin-top: 10px; text-wrap: balance; }
+.postCover { width: 100%; border-radius: var(--radius-img); margin-top: 26px; display: block; }
+.prose { margin-top: 28px; margin-bottom: 40px; font-size: 16px; line-height: 1.75; }
+.prose p { margin: 0 0 18px; opacity: 0.88; }
+.prose h2 { font-family: var(--font-serif), Georgia, serif; font-weight: 600; font-size: 26px; margin: 34px 0 12px; }
+.page[data-fonts='editorial'] .prose h2 { font-family: var(--font-editorial), sans-serif; font-weight: 800; text-transform: uppercase; font-size: 20px; letter-spacing: 0.02em; }
+.page[data-fonts='geo'] .prose h2 { font-family: var(--font-geo), sans-serif; font-weight: 500; }
+.prose h3 { font-weight: 700; font-size: 17px; margin: 26px 0 10px; }
+.prose ul { margin: 0 0 18px; padding-left: 22px; }
+.prose li { margin-bottom: 8px; opacity: 0.88; }
+.prose a { color: var(--c-primary); }
+.prose strong { font-weight: 700; }

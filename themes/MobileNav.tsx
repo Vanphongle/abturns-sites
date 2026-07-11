@@ -5,6 +5,7 @@ import s from './theme.module.css'
 
 interface MobileNavProps {
   links: Array<{ id: string; label: string }>
+  blogHref?: string | null
   bookHref: string | null
   bookLabel: string | null
 }
@@ -14,7 +15,7 @@ interface MobileNavProps {
  * 760px; this hamburger opens a simple panel with the section links + the
  * booking CTA. Pure useState — no portal, no dependency.
  */
-export default function MobileNav({ links, bookHref, bookLabel }: MobileNavProps) {
+export default function MobileNav({ links, blogHref, bookHref, bookLabel }: MobileNavProps) {
   const [open, setOpen] = useState(false)
   return (
     <div className={s.mobileNav}>
@@ -36,6 +37,9 @@ export default function MobileNav({ links, bookHref, bookLabel }: MobileNavProps
               {l.label}
             </a>
           ))}
+          {blogHref && (
+            <a href={blogHref} className={s.mobileLink} onClick={() => setOpen(false)}>Journal</a>
+          )}
           {bookHref && (
             <a href={bookHref} className={s.cta} onClick={() => setOpen(false)}>
               {bookLabel}

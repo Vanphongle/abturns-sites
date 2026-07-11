@@ -108,6 +108,10 @@ export interface SiteData {
   name: string
   slug: string
   domain: string | null
+  /** '' when served on a custom domain (paths are root-relative), else '/sites/{slug}'. */
+  basePath: string
+  /** Published journal posts (drives the Journal nav link). */
+  postsCount: number
   bookingUrl: string | null
   /** Builder selection. Sourced from websites.theme_id/variation_id/palette
    *  once Phase 3 wires the reads; until then settings-key fallback only. */
@@ -224,7 +228,7 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
 
   const settings = (site.settings ?? {}) as SiteSettings
 
-  const [galleryRes, promoRes, faqRes, reviewRes, menuRes, svcRes, teamRes, shopRes] = await Promise.all([
+  const [galleryRes, promoRes, faqRes, reviewRes, menuRes, svcRes, teamRes, shopRes, postCountRes] = await Promise.all([
     supabase.from('website_gallery').select('image_url, alt, caption, sort_order').eq('website_id', site.id).order('sort_order'),
     supabase.from('website_promotions').select('title, body, sort_order').eq('website_id', site.id).order('sort_order'),
     supabase.from('website_faqs').select('question, answer, sort_order').eq('website_id', site.id).order('sort_order'),
@@ -240,6 +244,7 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
     site.shop_id
       ? supabase.from('website_shop_info').select('*').eq('shop_id', site.shop_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase.from('website_posts').select('id', { count: 'exact', head: true }).eq('website_id', site.id).eq('is_published', true),
   ])
 
   const canonical = mergeCanonical(settings, (shopRes.data ?? null) as CanonicalShop | null)
@@ -270,6 +275,8 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
     name: canonical.name || site.name,
     slug: site.slug,
     domain: site.domain,
+    basePath: byDomain ? '' : `/sites/${site.slug}`,
+    postsCount: ('count' in postCountRes ? postCountRes.count : 0) ?? 0,
     bookingUrl: effectiveBookingCode && bookingBase ? `${bookingBase}/${effectiveBookingCode}` : null,
     themeId: (site as { theme_id?: string | null }).theme_id ?? settings.theme ?? null,
     variationId: (site as { variation_id?: string | null }).variation_id ?? settings.variation ?? null,
@@ -357,6 +364,8 @@ export async function getSitePreview(slug: string, token: string): Promise<SiteD
     name: canonical.name || p.site.name,
     slug: p.site.slug,
     domain: p.site.domain,
+    basePath: `/sites/${p.site.slug}`,
+    postsCount: 0,
     bookingUrl: effectiveBookingCode && bookingBase ? `${bookingBase}/${effectiveBookingCode}` : null,
     themeId: p.site.theme_id ?? pSettings.theme ?? null,
     variationId: p.site.variation_id ?? pSettings.variation ?? null,
@@ -369,5 +378,78 @@ export async function getSitePreview(slug: string, token: string): Promise<SiteD
     faqs: p.faqs ?? [],
     reviews: p.reviews ?? [],
     hours: canonical.hours,
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// Journal (blog) — published sites only. RLS hides drafts and unpublished
+// sites, so these return empty/null for anything not public.
+// ---------------------------------------------------------------------------
+
+export interface SitePost {
+  slug: string
+  title: string
+  excerpt: string | null
+  bodyMd: string
+  coverImageUrl: string | null
+  publishedAt: string | null
+  seoTitle: string | null
+  seoDescription: string | null
+}
+
+async function resolvePublishedSite(tenant: string) {
+  const byDomain = tenant.startsWith('~')
+  const value = byDomain ? tenant.slice(1) : tenant
+  let query = supabase.from('websites').select('id, slug, domain, name, is_published, theme_id, variation_id, palette')
+  query = byDomain ? query.eq('domain', value) : query.eq('slug', value)
+  const { data: site } = await query.maybeSingle()
+  if (!site || !site.is_published) return null
+  return { ...site, basePath: byDomain ? '' : `/sites/${site.slug}` }
+}
+
+export async function getSitePosts(tenant: string) {
+  const site = await resolvePublishedSite(tenant)
+  if (!site) return null
+  const { data } = await supabase
+    .from('website_posts')
+    .select('slug, title, excerpt, published_at')
+    .eq('website_id', site.id)
+    .eq('is_published', true)
+    .order('published_at', { ascending: false, nullsFirst: false })
+  return {
+    site,
+    posts: ((data ?? []) as Array<{ slug: string; title: string; excerpt: string | null; published_at: string | null }>).map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt,
+      publishedAt: p.published_at,
+    })),
+  }
+}
+
+export async function getSitePost(tenant: string, postSlug: string) {
+  const site = await resolvePublishedSite(tenant)
+  if (!site) return null
+  const { data: p } = await supabase
+    .from('website_posts')
+    .select('slug, title, excerpt, body_md, cover_image_url, published_at, seo_title, seo_description')
+    .eq('website_id', site.id)
+    .eq('slug', postSlug)
+    .eq('is_published', true)
+    .maybeSingle()
+  if (!p) return null
+  return {
+    site,
+    post: {
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt,
+      bodyMd: p.body_md,
+      coverImageUrl: p.cover_image_url,
+      publishedAt: p.published_at,
+      seoTitle: p.seo_title,
+      seoDescription: p.seo_description,
+    } as SitePost,
   }
 }

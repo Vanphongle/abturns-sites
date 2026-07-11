@@ -27,7 +27,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     })
   }
 
-  const host = (req.headers.get('host') || '').split(':')[0]
+  const host = req.headers.get('host') || ''
   const proto = req.headers.get('x-forwarded-proto') || 'https'
   const base = site.domain ? `https://${site.domain}` : `${proto}://${host}`
   return new Response(`User-agent: *\nAllow: /\n\nSitemap: ${base}/sitemap.xml\n`, {
