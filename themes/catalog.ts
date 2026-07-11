@@ -1,12 +1,23 @@
-// Theme catalog — Website Builder v1 (3 themes × 3 variations).
+// Theme catalog — Website Builder v1 luxury lineup (3 themes × 3 variations).
 // A THEME is a family of looks; a VARIATION is a concrete configuration of
-// the shared section engine (ThemeSite.tsx): fonts, density, hero layout,
-// section styling flags, light/dark, section order. Adding a theme or
-// variation = adding an entry here (plus CSS variant classes if it needs a
-// new axis) — the builder UI and renderer both read this catalog.
+// the shared section engine (ThemeSite.tsx): display face, density, hero
+// archetype, section treatments, light/dark, stock-photo mood, section
+// order. Adding a theme or variation = adding an entry here (plus CSS
+// variant rules if it needs a new axis) — the builder UI and renderer both
+// read this catalog.
 //
 // The POS builder keeps a MIRROR of ids/labels in
 // src/features/website/lib/themeCatalog.ts — update both together.
+//
+// The families:
+//   maison  — Parisian atelier: Cormorant serif, ivory + gold hairlines,
+//             arch-cropped imagery, fine-dining service menu.
+//   atelier — fashion editorial: oversized Archivo display, stark contrast,
+//             numbered service ledger, masonry gallery.
+//   riviera — resort spa: full-bleed veil hero, soft glass cards,
+//             filmstrip gallery, rounded serenity.
+
+import type { StockMood } from '@/lib/stockPhotos'
 
 export type SectionId =
   | 'announcement'
@@ -22,17 +33,21 @@ export type SectionId =
 
 export interface VariationConfig {
   label: string
-  /** Display-face treatment: serif display / all-sans / uppercase editorial. */
-  fonts: 'serif' | 'sans' | 'editorial'
+  /** Display-face: Cormorant serif / Archivo editorial / Jost geometric. */
+  fonts: 'serif' | 'editorial' | 'geo'
   /** Section vertical rhythm. */
   density: 'airy' | 'regular' | 'compact'
-  /** Hero arrangement. */
-  hero: 'split' | 'centered' | 'banner'
-  /** Services list treatment. */
-  services: 'dotted' | 'cards' | 'rows'
+  /** Hero archetype: arch triptych / asymmetric editorial / full-bleed veil / split. */
+  hero: 'arch' | 'editorial' | 'veil' | 'split'
+  /** Services treatment: fine-dining menu / numbered ledger / soft cards. */
+  services: 'menu' | 'ledger' | 'cards'
+  /** Gallery treatment: arch row / masonry columns / filmstrip scroll. */
+  gallery: 'arch' | 'masonry' | 'film'
   /** Corner rounding personality. */
   radius: 'soft' | 'round' | 'sharp'
   mode: 'light' | 'dark'
+  /** Which built-in sample-photo set fills empty hero/gallery slots. */
+  stockMood: StockMood
   sectionOrder: SectionId[]
 }
 
@@ -48,76 +63,93 @@ const STANDARD_ORDER: SectionId[] = [
 ]
 
 export const THEME_CATALOG: Record<string, ThemeConfig> = {
-  'modern-minimal': {
-    label: 'Modern Minimal',
-    description: 'Clean, whitespace, photo-forward.',
-    defaultPaletteId: 'midnight',
+  maison: {
+    label: 'Maison',
+    description: 'Parisian atelier — serif elegance, ivory and gold.',
+    defaultPaletteId: 'classic',
     variations: {
-      light: {
-        label: 'Light',
-        fonts: 'sans', density: 'airy', hero: 'centered', services: 'rows', radius: 'soft', mode: 'light',
-        sectionOrder: STANDARD_ORDER,
-      },
-      bold: {
-        label: 'Bold',
-        fonts: 'sans', density: 'compact', hero: 'banner', services: 'cards', radius: 'sharp', mode: 'light',
-        sectionOrder: ['announcement', 'hero', 'services', 'promotions', 'gallery', 'reviews', 'team', 'faqs', 'visit', 'bookcta'],
-      },
-      editorial: {
-        label: 'Editorial',
-        fonts: 'editorial', density: 'regular', hero: 'split', services: 'rows', radius: 'sharp', mode: 'light',
-        sectionOrder: ['announcement', 'hero', 'gallery', 'services', 'promotions', 'team', 'reviews', 'faqs', 'visit', 'bookcta'],
-      },
-    },
-  },
-  luxe: {
-    label: 'Luxe',
-    description: 'Spa-calm, serif elegance.',
-    defaultPaletteId: 'rose-quartz',
-    variations: {
-      noir: {
-        label: 'Noir',
-        fonts: 'serif', density: 'airy', hero: 'centered', services: 'dotted', radius: 'soft', mode: 'dark',
+      ivoire: {
+        label: 'Ivoire',
+        fonts: 'serif', density: 'airy', hero: 'arch', services: 'menu', gallery: 'arch',
+        radius: 'soft', mode: 'light', stockMood: 'warm',
         sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'promotions', 'reviews', 'team', 'faqs', 'visit', 'bookcta'],
       },
-      champagne: {
-        label: 'Champagne',
-        fonts: 'serif', density: 'regular', hero: 'split', services: 'dotted', radius: 'round', mode: 'light',
-        sectionOrder: STANDARD_ORDER,
+      noir: {
+        label: 'Noir',
+        fonts: 'serif', density: 'airy', hero: 'arch', services: 'menu', gallery: 'arch',
+        radius: 'soft', mode: 'dark', stockMood: 'noir',
+        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'reviews', 'promotions', 'team', 'faqs', 'visit', 'bookcta'],
       },
-      rose: {
-        label: 'Rose',
-        fonts: 'serif', density: 'airy', hero: 'banner', services: 'cards', radius: 'round', mode: 'light',
-        sectionOrder: ['announcement', 'hero', 'gallery', 'promotions', 'services', 'reviews', 'team', 'faqs', 'visit', 'bookcta'],
+      blush: {
+        label: 'Blush',
+        fonts: 'serif', density: 'regular', hero: 'split', services: 'menu', gallery: 'arch',
+        radius: 'round', mode: 'light', stockMood: 'warm',
+        sectionOrder: STANDARD_ORDER,
       },
     },
   },
-  fresh: {
-    label: 'Fresh',
-    description: 'Rounded, friendly, vibrant.',
-    defaultPaletteId: 'emerald',
+  atelier: {
+    label: 'Atelier',
+    description: 'Fashion editorial — bold type, stark and modern.',
+    defaultPaletteId: 'midnight',
     variations: {
-      pastel: {
-        label: 'Pastel',
-        fonts: 'sans', density: 'regular', hero: 'split', services: 'cards', radius: 'round', mode: 'light',
+      gallery: {
+        label: 'Gallery',
+        fonts: 'editorial', density: 'regular', hero: 'editorial', services: 'ledger', gallery: 'masonry',
+        radius: 'sharp', mode: 'light', stockMood: 'bright',
+        sectionOrder: ['announcement', 'hero', 'gallery', 'services', 'promotions', 'team', 'reviews', 'faqs', 'visit', 'bookcta'],
+      },
+      mode: {
+        label: 'Mode',
+        fonts: 'editorial', density: 'regular', hero: 'editorial', services: 'ledger', gallery: 'masonry',
+        radius: 'sharp', mode: 'dark', stockMood: 'noir',
+        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'reviews', 'promotions', 'team', 'faqs', 'visit', 'bookcta'],
+      },
+      linen: {
+        label: 'Linen',
+        fonts: 'editorial', density: 'compact', hero: 'split', services: 'ledger', gallery: 'masonry',
+        radius: 'sharp', mode: 'light', stockMood: 'bright',
         sectionOrder: STANDARD_ORDER,
       },
-      sunset: {
-        label: 'Sunset',
-        fonts: 'sans', density: 'regular', hero: 'banner', services: 'cards', radius: 'round', mode: 'light',
-        sectionOrder: ['announcement', 'hero', 'promotions', 'gallery', 'services', 'team', 'reviews', 'faqs', 'visit', 'bookcta'],
+    },
+  },
+  riviera: {
+    label: 'Riviera',
+    description: 'Resort spa — serene, airy, sun-washed calm.',
+    defaultPaletteId: 'emerald',
+    variations: {
+      azure: {
+        label: 'Azure',
+        fonts: 'geo', density: 'airy', hero: 'veil', services: 'cards', gallery: 'film',
+        radius: 'round', mode: 'light', stockMood: 'serene',
+        sectionOrder: ['announcement', 'hero', 'promotions', 'services', 'gallery', 'team', 'reviews', 'faqs', 'visit', 'bookcta'],
       },
-      mono: {
-        label: 'Mono',
-        fonts: 'editorial', density: 'compact', hero: 'centered', services: 'rows', radius: 'sharp', mode: 'dark',
-        sectionOrder: ['announcement', 'hero', 'services', 'reviews', 'gallery', 'team', 'faqs', 'visit', 'bookcta'],
+      dusk: {
+        label: 'Dusk',
+        fonts: 'geo', density: 'airy', hero: 'veil', services: 'cards', gallery: 'film',
+        radius: 'round', mode: 'dark', stockMood: 'serene',
+        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'reviews', 'promotions', 'team', 'faqs', 'visit', 'bookcta'],
+      },
+      sable: {
+        label: 'Sable',
+        fonts: 'geo', density: 'regular', hero: 'split', services: 'cards', gallery: 'film',
+        radius: 'round', mode: 'light', stockMood: 'warm',
+        sectionOrder: STANDARD_ORDER,
       },
     },
   },
 }
 
-export const DEFAULT_THEME_ID = 'luxe'
-export const DEFAULT_VARIATION_ID = 'champagne'
+export const DEFAULT_THEME_ID = 'maison'
+export const DEFAULT_VARIATION_ID = 'ivoire'
+
+/** Pre-luxury ids (and the pre-builder 'aurora' key) → nearest new family. */
+const LEGACY_THEME_MAP: Record<string, string> = {
+  aurora: 'maison',
+  luxe: 'maison',
+  'modern-minimal': 'atelier',
+  fresh: 'riviera',
+}
 
 export interface ThemeSelection {
   themeId: string
@@ -128,14 +160,13 @@ export interface ThemeSelection {
 
 /**
  * Resolve a (theme_id, variation_id) pair to a concrete config with safe
- * fallbacks. Legacy: the pre-builder 'aurora' theme key (and null) maps to
- * luxe/champagne — the closest look to the original single template — so
- * existing sites (demo-salon) keep rendering.
+ * fallbacks. Legacy ids map to the nearest luxury family so any site that
+ * predates the lineup keeps rendering.
  */
 export function resolveSelection(themeId?: string | null, variationId?: string | null): ThemeSelection {
-  const tid = !themeId || themeId === 'aurora' ? DEFAULT_THEME_ID : themeId
-  const theme = THEME_CATALOG[tid] ?? THEME_CATALOG[DEFAULT_THEME_ID]
-  const resolvedThemeId = THEME_CATALOG[tid] ? tid : DEFAULT_THEME_ID
+  const mapped = themeId ? (LEGACY_THEME_MAP[themeId] ?? themeId) : DEFAULT_THEME_ID
+  const theme = THEME_CATALOG[mapped] ?? THEME_CATALOG[DEFAULT_THEME_ID]
+  const resolvedThemeId = THEME_CATALOG[mapped] ? mapped : DEFAULT_THEME_ID
   const vid = variationId && theme.variations[variationId]
     ? variationId
     : resolvedThemeId === DEFAULT_THEME_ID
