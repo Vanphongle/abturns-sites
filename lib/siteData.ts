@@ -39,6 +39,9 @@ export interface SiteSettings {
   philosophy_em?: string
   philosophy_pillars_json?: string
   booking_policy?: string
+  booking_title?: string
+  closing_line?: string
+  closing_sub?: string
   ai_copy_generated_at?: string
   og_image_url?: string
   google_maps_url?: string

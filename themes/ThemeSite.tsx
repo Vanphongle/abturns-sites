@@ -340,7 +340,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
               </div>
               {st.booking_policy && bookHref && (
                 <div className={s.policyCard}>
-                  <div className={s.policyTitle}>Ready when you are.</div>
+                  <div className={s.policyTitle}>{st.booking_title || 'Plan your visit'}</div>
                   <p className={s.policyBody}>{st.booking_policy}</p>
                   <a href={bookHref} className={s.cta}>{bookLabel}</a>
                 </div>
@@ -355,8 +355,10 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       <section key="bookcta" className={s.bookBand}>
         <Reveal>
           <div className={s.bookBandOrnament} aria-hidden />
-          <h2 className={s.bookBandTitle}>Ready when <em>you</em> are.</h2>
-          <p className={s.bookBandSub}>Reserve your visit at {site.name}.</p>
+          {st.closing_line
+            ? <h2 className={s.bookBandTitle}>{st.closing_line}</h2>
+            : <h2 className={s.bookBandTitle}>Ready when <em>you</em> are.</h2>}
+          <p className={s.bookBandSub}>{st.closing_sub || `Reserve your visit at ${site.name}.`}</p>
           <a href={bookHref} className={`${s.cta} ${s.ctaLarge}`}>{bookLabel}</a>
         </Reveal>
       </section>
@@ -478,7 +480,6 @@ function Hero({
     return (
       <section className={s.heroArch}>
         <div className={s.container}>
-          <div className={s.heroEyebrow}>Welcome to {site.name}</div>
           {title}
           {desc}
           {actions}
@@ -525,7 +526,6 @@ function Hero({
           <Img img={heroImage} className={s.heroVeilImg} eager />
         </div>
         <div className={s.heroVeilCard}>
-          <div className={s.heroEyebrow}>{site.name}</div>
           {title}
           {desc}
           {actions}
@@ -539,7 +539,6 @@ function Hero({
     <section className={s.hero}>
       <div className={`${s.container} ${s.heroGrid}`}>
         <div>
-          <div className={s.heroEyebrow}>Welcome to {site.name}</div>
           {title}
           {desc}
           {actions}
