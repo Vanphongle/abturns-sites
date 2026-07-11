@@ -62,6 +62,9 @@ export interface SiteService {
   name: string
   priceText: string
   note: string | null
+  /** Primary menu category (junction-first; legacy category_id fallback). */
+  category: string | null
+  categoryOrder: number | null
 }
 
 export interface SiteTeamMember {
@@ -229,7 +232,7 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
     supabase.from('website_menu_items').select('name, description, price_text, sort_order').eq('website_id', site.id).order('sort_order'),
     // Linked-shop projections (column-whitelisted public views; empty when unlinked).
     site.shop_id
-      ? supabase.from('website_services').select('name, price, website_note, display_order').eq('shop_id', site.shop_id).order('display_order')
+      ? supabase.from('website_services').select('name, price, website_note, display_order, category, category_order').eq('shop_id', site.shop_id).order('display_order')
       : Promise.resolve({ data: [] as never[] }),
     site.shop_id
       ? supabase.from('website_team').select('name, photo_url, website_bio, display_order').eq('shop_id', site.shop_id).order('display_order')
@@ -242,15 +245,19 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
   const canonical = mergeCanonical(settings, (shopRes.data ?? null) as CanonicalShop | null)
 
   // Linked shop's REAL menu wins; standalone menu items are the fallback.
-  const linkedServices = ((svcRes.data ?? []) as Array<{ name: string; price: number | null; website_note: string | null }>).map((s) => ({
+  const linkedServices = ((svcRes.data ?? []) as Array<{ name: string; price: number | null; website_note: string | null; category: string | null; category_order: number | null }>).map((s) => ({
     name: s.name,
     priceText: priceTextFromNumber(s.price),
     note: s.website_note,
+    category: s.category,
+    categoryOrder: s.category_order,
   }))
   const menuServices = ((menuRes.data ?? []) as Array<{ name: string; description: string; price_text: string }>).map((m) => ({
     name: m.name,
     priceText: m.price_text || '',
     note: m.description || null,
+    category: null,
+    categoryOrder: null,
   }))
 
   const bookingBase = (process.env.NEXT_PUBLIC_BOOKING_BASE || '').replace(/\/$/, '')
@@ -315,7 +322,7 @@ interface PreviewPayload {
   faqs: Array<{ question: string; answer: string }>
   reviews: Array<{ author: string; quote: string; rating: number }>
   menu: Array<{ name: string; description: string; price_text: string }>
-  services: Array<{ name: string; price: number | null; website_note: string | null }>
+  services: Array<{ name: string; price: number | null; website_note: string | null; category?: string | null; category_order?: number | null }>
   team: Array<{ name: string; photo_url: string | null; website_bio: string | null }>
 }
 
@@ -330,11 +337,15 @@ export async function getSitePreview(slug: string, token: string): Promise<SiteD
     name: s.name,
     priceText: priceTextFromNumber(s.price),
     note: s.website_note,
+    category: s.category ?? null,
+    categoryOrder: s.category_order ?? null,
   }))
   const menuServices = (p.menu ?? []).map((m) => ({
     name: m.name,
     priceText: m.price_text || '',
     note: m.description || null,
+    category: null,
+    categoryOrder: null,
   }))
   const bookingBase = (process.env.NEXT_PUBLIC_BOOKING_BASE || '').replace(/\/$/, '')
 

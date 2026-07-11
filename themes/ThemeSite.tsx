@@ -5,6 +5,7 @@ import type { ThemeSelection, SectionId } from './catalog'
 import type { PaletteTokens } from '@/lib/palettes'
 import { getStockSet } from '@/lib/stockPhotos'
 import Reveal from './Reveal'
+import MobileNav from './MobileNav'
 import s from './theme.module.css'
 
 const DAY_LABELS: Record<DayKey, string> = {
@@ -391,6 +392,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
               <a key={n.id} href={`#${n.id}`} className={s.navLink}>{n.label}</a>
             ))}
             {bookHref && <a href={bookHref} className={s.cta}>{bookLabel}</a>}
+            <MobileNav links={nav.filter((n) => n.show)} bookHref={bookHref} bookLabel={bookLabel} />
           </nav>
         </div>
       </header>
@@ -558,15 +560,50 @@ function Hero({
 // Services — three treatments.
 // ---------------------------------------------------------------------------
 
+interface ServiceGroup {
+  label: string | null
+  items: SiteData['services']
+}
+
+/** Group by primary category (category_order, then name); uncategorized last.
+ *  A shop with no categories at all renders exactly as a single flat list. */
+function groupServices(services: SiteData['services']): ServiceGroup[] {
+  const map = new Map<string, { label: string | null; order: number; items: SiteData['services'] }>()
+  for (const svc of services) {
+    const key = svc.category ?? '\u0000none'
+    if (!map.has(key)) {
+      map.set(key, {
+        label: svc.category,
+        order: svc.category == null ? Number.MAX_SAFE_INTEGER : svc.categoryOrder ?? 1e9,
+        items: [],
+      })
+    }
+    map.get(key)!.items.push(svc)
+  }
+  return [...map.values()]
+    .sort((a, b) => a.order - b.order || (a.label ?? '').localeCompare(b.label ?? ''))
+    .map(({ label, items }) => ({ label, items }))
+}
+
 function Services({ services, styleAxis }: { services: SiteData['services']; styleAxis: 'menu' | 'ledger' | 'cards' }) {
+  const groups = groupServices(services)
+  const flat = groups.length === 1 && groups[0].label == null
+
   if (styleAxis === 'cards') {
     return (
-      <div className={s.serviceCards}>
-        {services.map((svc, i) => (
-          <div key={i} className={s.serviceCard}>
-            <div className={s.serviceName}>{svc.name}</div>
-            {svc.note && <p className={s.serviceNote}>{svc.note}</p>}
-            {svc.priceText && <span className={s.servicePrice}>{svc.priceText}</span>}
+      <div>
+        {groups.map((g, gi) => (
+          <div key={gi} className={s.serviceGroup}>
+            {g.label && <h3 className={s.serviceCategory}>{g.label}</h3>}
+            <div className={s.serviceCards}>
+              {g.items.map((svc, i) => (
+                <div key={i} className={s.serviceCard}>
+                  <div className={s.serviceName}>{svc.name}</div>
+                  {svc.note && <p className={s.serviceNote}>{svc.note}</p>}
+                  {svc.priceText && <span className={s.servicePrice}>{svc.priceText}</span>}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -574,33 +611,52 @@ function Services({ services, styleAxis }: { services: SiteData['services']; sty
   }
 
   if (styleAxis === 'ledger') {
+    let n = 0
     return (
       <div className={s.ledger}>
-        {services.map((svc, i) => (
-          <div key={i} className={s.ledgerRow}>
-            <span className={s.ledgerIndex}>{String(i + 1).padStart(2, '0')}</span>
-            <span>
-              <span className={s.serviceName}>{svc.name}</span>
-              {svc.note && <p className={s.serviceNote}>{svc.note}</p>}
-            </span>
-            {svc.priceText && <span className={s.ledgerPrice}>{svc.priceText}</span>}
+        {groups.map((g, gi) => (
+          <div key={gi}>
+            {g.label && <h3 className={s.serviceCategory}>{g.label}</h3>}
+            {g.items.map((svc, i) => {
+              n += 1
+              return (
+                <div key={i} className={s.ledgerRow}>
+                  <span className={s.ledgerIndex}>{String(n).padStart(2, '0')}</span>
+                  <span>
+                    <span className={s.serviceName}>{svc.name}</span>
+                    {svc.note && <p className={s.serviceNote}>{svc.note}</p>}
+                  </span>
+                  {svc.priceText && <span className={s.ledgerPrice}>{svc.priceText}</span>}
+                </div>
+              )
+            })}
           </div>
         ))}
       </div>
     )
   }
 
-  // menu (fine-dining)
+  // menu (fine-dining): flat shops keep the two-column item flow; categorized
+  // shops get category blocks flowing across the same two columns.
+  const renderItem = (svc: SiteData['services'][number], i: number) => (
+    <div key={i} className={s.menuItem}>
+      <div className={s.menuRow}>
+        <span className={s.serviceName}>{svc.name}</span>
+        <span className={s.menuDots} aria-hidden />
+        {svc.priceText && <span className={s.servicePrice}>{svc.priceText}</span>}
+      </div>
+      {svc.note && <p className={s.serviceNote}>{svc.note}</p>}
+    </div>
+  )
+  if (flat) {
+    return <div className={s.menuList}>{services.map(renderItem)}</div>
+  }
   return (
     <div className={s.menuList}>
-      {services.map((svc, i) => (
-        <div key={i} className={s.menuItem}>
-          <div className={s.menuRow}>
-            <span className={s.serviceName}>{svc.name}</span>
-            <span className={s.menuDots} aria-hidden />
-            {svc.priceText && <span className={s.servicePrice}>{svc.priceText}</span>}
-          </div>
-          {svc.note && <p className={s.serviceNote}>{svc.note}</p>}
+      {groups.map((g, gi) => (
+        <div key={gi} className={s.menuGroup}>
+          {g.label && <h3 className={s.serviceCategory}>{g.label}</h3>}
+          {g.items.map(renderItem)}
         </div>
       ))}
     </div>
