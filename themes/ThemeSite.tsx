@@ -147,9 +147,11 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
         />
         {ticker.length > 0 && (
           <div className={s.ticker} aria-label="Specialties">
-            {ticker.slice(0, 6).map((t, i) => (
-              <span key={i} className={s.tickerItem}>{t}</span>
-            ))}
+            <div className={s.tickerTrack}>
+              {[...ticker.slice(0, 6), ...ticker.slice(0, 6)].map((t, i) => (
+                <span key={i} className={s.tickerItem} aria-hidden={i >= Math.min(ticker.length, 6) || undefined}>{t}</span>
+              ))}
+            </div>
           </div>
         )}
       </div>
