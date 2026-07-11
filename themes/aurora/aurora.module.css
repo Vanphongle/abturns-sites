@@ -1,0 +1,162 @@
+/* Aurora — stock theme #1. Warm-neutral editorial look: serif display, airy
+   sections, one accent color. Every color rides the --c-* tokens so a design
+   spec (or the future Generate step) can reskin it per salon. */
+
+.page { background: var(--c-bg); color: var(--c-ink); }
+
+.container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+/* Announcement */
+.announce {
+  background: var(--c-ink); color: var(--c-bg);
+  text-align: center; font-size: 13px; letter-spacing: 0.02em;
+  padding: 8px 16px;
+}
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--c-bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent);
+}
+.headerRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; }
+.brand { font-family: var(--font-display), serif; font-size: 20px; font-weight: 600; text-decoration: none; letter-spacing: 0.01em; }
+.nav { display: flex; gap: 22px; align-items: center; }
+.navLink { font-size: 13.5px; text-decoration: none; opacity: 0.75; letter-spacing: 0.03em; }
+.navLink:hover { opacity: 1; }
+@media (max-width: 720px) { .nav .navLink { display: none; } }
+
+.cta {
+  display: inline-block; background: var(--c-primary); color: #fff;
+  padding: 10px 22px; border-radius: 999px; text-decoration: none;
+  font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--c-primary) 35%, transparent);
+}
+.cta:hover { transform: translateY(-1px); box-shadow: 0 4px 16px color-mix(in srgb, var(--c-primary) 45%, transparent); }
+
+/* Hero */
+.hero { padding: 72px 0 64px; }
+.heroGrid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
+@media (max-width: 860px) { .heroGrid { grid-template-columns: 1fr; gap: 32px; } }
+.heroTitle { font-size: clamp(38px, 6vw, 64px); font-weight: 500; }
+.heroTitle em { font-style: italic; color: var(--c-primary); }
+.heroDesc { margin-top: 20px; font-size: 17px; opacity: 0.8; max-width: 46ch; }
+.heroActions { margin-top: 32px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.heroSecondary { font-size: 14px; text-decoration: none; opacity: 0.7; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
+.heroImageWrap { position: relative; }
+.heroImage { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 20px; }
+.heroImageFallback {
+  width: 100%; aspect-ratio: 4 / 5; border-radius: 20px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c-primary) 18%, var(--c-bg)), color-mix(in srgb, var(--c-accent) 30%, var(--c-bg)));
+}
+.signature {
+  position: absolute; left: 18px; bottom: 18px;
+  background: color-mix(in srgb, var(--c-bg) 92%, transparent); backdrop-filter: blur(8px);
+  border-radius: 14px; padding: 12px 18px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+.signatureLabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.6; }
+.signatureRow { display: flex; align-items: baseline; gap: 12px; margin-top: 2px; }
+.signatureName { font-weight: 600; font-size: 15px; }
+.signaturePrice { color: var(--c-primary); font-weight: 700; }
+
+/* Sections */
+.section { padding: 64px 0; }
+.sectionAlt { background: color-mix(in srgb, var(--c-ink) 3.5%, var(--c-bg)); }
+.kicker { font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--c-primary); font-weight: 700; }
+.sectionTitle { font-size: clamp(26px, 3.6vw, 38px); margin-top: 8px; font-weight: 500; }
+.sectionHead { margin-bottom: 36px; }
+
+/* Promotions */
+.promoGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.promoCard {
+  border: 1px solid color-mix(in srgb, var(--c-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 6%, var(--c-bg));
+  border-radius: 16px; padding: 22px;
+}
+.promoTitle { font-weight: 700; font-size: 16px; color: var(--c-primary); font-family: var(--font-body); }
+.promoBody { margin-top: 6px; font-size: 14px; opacity: 0.85; white-space: pre-wrap; }
+
+/* Services */
+.serviceList { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 40px; }
+@media (max-width: 720px) { .serviceList { grid-template-columns: 1fr; } }
+.serviceRow { display: flex; align-items: baseline; gap: 10px; padding: 14px 0; border-bottom: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent); }
+.serviceName { font-weight: 600; font-size: 15.5px; }
+.serviceDots { flex: 1; border-bottom: 1.5px dotted color-mix(in srgb, var(--c-ink) 25%, transparent); transform: translateY(-4px); }
+.servicePrice { font-weight: 700; color: var(--c-primary); white-space: nowrap; }
+.serviceNote { font-size: 13px; opacity: 0.65; margin-top: 3px; }
+
+/* Gallery */
+.galleryGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.galleryItem { border-radius: 14px; overflow: hidden; position: relative; }
+.galleryImg { width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform 0.3s ease; }
+.galleryItem:hover .galleryImg { transform: scale(1.03); }
+.galleryCaption {
+  position: absolute; inset: auto 0 0 0; padding: 24px 12px 10px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+  color: #fff; font-size: 12.5px;
+}
+
+/* Team */
+.teamGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+.teamCard { text-align: center; }
+.teamPhoto { width: 112px; height: 112px; border-radius: 50%; object-fit: cover; margin: 0 auto; }
+.teamInitial {
+  width: 112px; height: 112px; border-radius: 50%; margin: 0 auto;
+  display: grid; place-items: center; font-family: var(--font-display), serif;
+  font-size: 40px; color: #fff;
+  background: linear-gradient(150deg, var(--c-primary), color-mix(in srgb, var(--c-primary) 55%, var(--c-ink)));
+}
+.teamName { margin-top: 12px; font-weight: 600; }
+.teamBio { font-size: 13.5px; opacity: 0.7; margin-top: 4px; }
+
+/* Reviews */
+.reviewGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.reviewCard {
+  background: var(--c-bg); border: 1px solid color-mix(in srgb, var(--c-ink) 9%, transparent);
+  border-radius: 16px; padding: 24px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+.stars { color: var(--c-accent); letter-spacing: 2px; font-size: 14px; }
+.reviewQuote { margin-top: 10px; font-size: 15px; }
+.reviewAuthor { margin-top: 12px; font-size: 13px; font-weight: 600; opacity: 0.7; }
+
+/* FAQ */
+.faq { max-width: 720px; }
+.faqItem { border-bottom: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent); }
+.faqItem summary {
+  cursor: pointer; padding: 16px 0; font-weight: 600; font-size: 15.5px;
+  list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.faqItem summary::-webkit-details-marker { display: none; }
+.faqItem summary::after { content: '+'; font-size: 20px; color: var(--c-primary); font-weight: 400; }
+.faqItem[open] summary::after { content: '–'; }
+.faqAnswer { padding: 0 0 16px; font-size: 14.5px; opacity: 0.8; white-space: pre-wrap; }
+
+/* Visit / hours */
+.visitGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+@media (max-width: 780px) { .visitGrid { grid-template-columns: 1fr; } }
+.contactList { display: grid; gap: 10px; font-size: 15px; }
+.contactList a { color: var(--c-primary); text-decoration: none; font-weight: 600; }
+.holiday {
+  border: 1px solid color-mix(in srgb, var(--c-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--c-accent) 12%, var(--c-bg));
+  border-radius: 12px; padding: 12px 16px; font-size: 13.5px; white-space: pre-wrap; margin-bottom: 16px;
+}
+.hoursTable { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.hoursTable td { padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--c-ink) 8%, transparent); }
+.hoursTable td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.hoursClosed { opacity: 0.55; }
+.hoursToday td { font-weight: 700; color: var(--c-primary); }
+.socialRow { display: flex; gap: 14px; margin-top: 18px; }
+.socialRow a { font-size: 13.5px; text-decoration: none; border-bottom: 1px solid currentColor; opacity: 0.75; }
+
+/* Book band */
+.bookBand { text-align: center; padding: 72px 24px; background: var(--c-ink); color: var(--c-bg); }
+.bookBandTitle { font-size: clamp(26px, 4vw, 40px); font-weight: 500; }
+.bookBandSub { opacity: 0.75; margin-top: 10px; }
+.bookBand .cta { margin-top: 26px; }
+
+/* Footer — the salon's own site: no platform branding, no backlinks. */
+.footer { padding: 28px 24px; text-align: center; font-size: 13px; opacity: 0.6; }

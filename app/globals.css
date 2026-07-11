@@ -1,0 +1,23 @@
+/* Base reset + the design-token seam every theme reads. Themes may override
+   the --c-* tokens per site (settings.design_*) via inline style on their
+   root element — that's how one theme renders many looks. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body), system-ui, sans-serif;
+  color: var(--c-ink, #1f1b16);
+  background: var(--c-bg, #faf8f5);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+img { max-width: 100%; display: block; }
+
+a { color: inherit; }
+
+h1, h2, h3 { font-family: var(--font-display), Georgia, serif; line-height: 1.15; margin: 0; }
+p { margin: 0; }
