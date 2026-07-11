@@ -94,6 +94,11 @@ export interface SiteData {
   slug: string
   domain: string | null
   bookingUrl: string | null
+  /** Builder selection. Sourced from websites.theme_id/variation_id/palette
+   *  once Phase 3 wires the reads; until then settings-key fallback only. */
+  themeId: string | null
+  variationId: string | null
+  paletteId: string | null
   settings: SiteSettings
   services: SiteService[]
   team: SiteTeamMember[]
@@ -181,6 +186,9 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
     slug: site.slug,
     domain: site.domain,
     bookingUrl: site.booking_code && bookingBase ? `${bookingBase}/${site.booking_code}` : null,
+    themeId: settings.theme ?? null,
+    variationId: settings.variation ?? null,
+    paletteId: settings.palette_id ?? null,
     settings,
     services: linkedServices.length > 0 ? linkedServices : menuServices,
     team: ((teamRes.data ?? []) as Array<{ name: string; photo_url: string | null; website_bio: string | null }>).map((t) => ({
@@ -248,12 +256,16 @@ export async function getSitePreview(slug: string, token: string): Promise<SiteD
   }))
   const bookingBase = (process.env.NEXT_PUBLIC_BOOKING_BASE || '').replace(/\/$/, '')
 
+  const pSettings = p.site.settings ?? {}
   return {
     name: p.site.name,
     slug: p.site.slug,
     domain: p.site.domain,
     bookingUrl: p.site.booking_code && bookingBase ? `${bookingBase}/${p.site.booking_code}` : null,
-    settings: p.site.settings ?? {},
+    themeId: pSettings.theme ?? null,
+    variationId: pSettings.variation ?? null,
+    paletteId: pSettings.palette_id ?? null,
+    settings: pSettings,
     services: linkedServices.length > 0 ? linkedServices : menuServices,
     team: (p.team ?? []).map((t) => ({ name: t.name, photoUrl: t.photo_url, bio: t.website_bio })),
     gallery: (p.gallery ?? []).map((g) => ({ imageUrl: g.image_url, alt: g.alt || '', caption: g.caption })),

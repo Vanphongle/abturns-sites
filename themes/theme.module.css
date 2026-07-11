@@ -1,19 +1,28 @@
-/* Aurora — stock theme #1. Warm-neutral editorial look: serif display, airy
-   sections, one accent color. Every color rides the --c-* tokens so a design
-   spec (or the future Generate step) can reskin it per salon. */
+/* ThemeSite — the shared section engine. All 9 variations render through
+   these styles; variation axes arrive as data-attributes on .page and
+   palette tokens as inline --c-* vars. Adding a variation should mostly be
+   a catalog entry; add a new axis value here only when a look needs it. */
 
 .page { background: var(--c-bg); color: var(--c-ink); }
 
+/* --- Variation axes ------------------------------------------------------ */
+.page { --section-pad: 64px; --radius-lg: 16px; --radius-img: 20px; }
+.page[data-density='airy'] { --section-pad: 92px; }
+.page[data-density='compact'] { --section-pad: 44px; }
+.page[data-radius='round'] { --radius-lg: 26px; --radius-img: 28px; }
+.page[data-radius='sharp'] { --radius-lg: 6px; --radius-img: 8px; }
+
+/* Display face per fonts axis */
+.display { font-family: var(--font-display), Georgia, serif; font-weight: 500; letter-spacing: 0.01em; }
+.page[data-fonts='sans'] .display { font-family: var(--font-body), system-ui, sans-serif; font-weight: 750; letter-spacing: -0.02em; }
+.page[data-fonts='editorial'] .display { font-family: var(--font-body), system-ui, sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+
 .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 
-/* Announcement */
-.announce {
-  background: var(--c-ink); color: var(--c-bg);
-  text-align: center; font-size: 13px; letter-spacing: 0.02em;
-  padding: 8px 16px;
-}
+/* --- Announcement / header ------------------------------------------------ */
+.announce { background: var(--c-primary); color: #fff; text-align: center; font-size: 13px; letter-spacing: 0.02em; padding: 8px 16px; }
+.page[data-mode='dark'] .announce { background: var(--c-primary); color: var(--c-bg); }
 
-/* Header */
 .header {
   position: sticky; top: 0; z-index: 50;
   background: color-mix(in srgb, var(--c-bg) 88%, transparent);
@@ -21,7 +30,8 @@
   border-bottom: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent);
 }
 .headerRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; }
-.brand { font-family: var(--font-display), serif; font-size: 20px; font-weight: 600; text-decoration: none; letter-spacing: 0.01em; }
+.brand { composes: display; font-size: 20px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; }
+.brandLogo { height: 34px; width: auto; border-radius: 8px; }
 .nav { display: flex; gap: 22px; align-items: center; }
 .navLink { font-size: 13.5px; text-decoration: none; opacity: 0.75; letter-spacing: 0.03em; }
 .navLink:hover { opacity: 1; }
@@ -35,38 +45,63 @@
   box-shadow: 0 2px 10px color-mix(in srgb, var(--c-primary) 35%, transparent);
 }
 .cta:hover { transform: translateY(-1px); box-shadow: 0 4px 16px color-mix(in srgb, var(--c-primary) 45%, transparent); }
+.page[data-radius='sharp'] .cta { border-radius: 8px; }
 
-/* Hero */
-.hero { padding: 72px 0 64px; }
+/* --- Hero ------------------------------------------------------------------ */
+.hero { padding: calc(var(--section-pad) + 8px) 0 var(--section-pad); }
 .heroGrid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
 @media (max-width: 860px) { .heroGrid { grid-template-columns: 1fr; gap: 32px; } }
-.heroTitle { font-size: clamp(38px, 6vw, 64px); font-weight: 500; }
+.heroTitle { composes: display; font-size: clamp(38px, 6vw, 64px); line-height: 1.08; }
 .heroTitle em { font-style: italic; color: var(--c-primary); }
+.page[data-fonts='sans'] .heroTitle em, .page[data-fonts='editorial'] .heroTitle em { font-style: normal; color: var(--c-primary); }
 .heroDesc { margin-top: 20px; font-size: 17px; opacity: 0.8; max-width: 46ch; }
 .heroActions { margin-top: 32px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .heroSecondary { font-size: 14px; text-decoration: none; opacity: 0.7; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
 .heroImageWrap { position: relative; }
-.heroImage { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 20px; }
+.heroImage { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--radius-img); }
 .heroImageFallback {
-  width: 100%; aspect-ratio: 4 / 5; border-radius: 20px;
+  width: 100%; aspect-ratio: 4 / 5; border-radius: var(--radius-img);
   background: linear-gradient(160deg, color-mix(in srgb, var(--c-primary) 18%, var(--c-bg)), color-mix(in srgb, var(--c-accent) 30%, var(--c-bg)));
 }
+
+/* centered: text block centered, image becomes a wide band below */
+.heroCentered { text-align: center; }
+.heroCentered .heroDesc { margin-left: auto; margin-right: auto; }
+.heroCentered .heroActions { justify-content: center; }
+.heroCenteredImage { margin-top: 44px; }
+.heroCenteredImage .heroImage, .heroCenteredImage .heroImageFallback { aspect-ratio: 21 / 9; }
+
+/* banner: full-bleed image with overlaid text */
+.heroBanner { position: relative; border-radius: 0; overflow: hidden; padding: 0; }
+.heroBannerMedia { position: absolute; inset: 0; }
+.heroBannerMedia img { width: 100%; height: 100%; object-fit: cover; }
+.heroBannerMedia::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,8,6,0.35), rgba(10,8,6,0.65)); }
+.heroBannerFallback { position: absolute; inset: 0; background: linear-gradient(160deg, color-mix(in srgb, var(--c-primary) 60%, #1a1512), color-mix(in srgb, var(--c-accent) 40%, #1a1512)); }
+.heroBannerInner { position: relative; z-index: 1; padding: clamp(96px, 16vw, 180px) 24px; text-align: center; color: #fff; }
+.heroBannerInner .heroTitle em { color: color-mix(in srgb, var(--c-accent) 80%, #fff); }
+.heroBannerInner .heroDesc { color: rgba(255,255,255,0.85); margin-left: auto; margin-right: auto; }
+.heroBannerInner .heroActions { justify-content: center; }
+.heroBannerInner .heroSecondary { color: #fff; opacity: 0.85; }
+
 .signature {
   position: absolute; left: 18px; bottom: 18px;
   background: color-mix(in srgb, var(--c-bg) 92%, transparent); backdrop-filter: blur(8px);
   border-radius: 14px; padding: 12px 18px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
+.signatureInline { position: static; display: inline-block; margin-top: 26px; box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
 .signatureLabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.6; }
 .signatureRow { display: flex; align-items: baseline; gap: 12px; margin-top: 2px; }
 .signatureName { font-weight: 600; font-size: 15px; }
 .signaturePrice { color: var(--c-primary); font-weight: 700; }
+.heroBannerInner .signature { background: rgba(20,16,13,0.55); color: #fff; }
+.heroBannerInner .signaturePrice { color: color-mix(in srgb, var(--c-accent) 85%, #fff); }
 
-/* Sections */
-.section { padding: 64px 0; }
+/* --- Sections shared ------------------------------------------------------- */
+.section { padding: var(--section-pad) 0; }
 .sectionAlt { background: color-mix(in srgb, var(--c-ink) 3.5%, var(--c-bg)); }
 .kicker { font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--c-primary); font-weight: 700; }
-.sectionTitle { font-size: clamp(26px, 3.6vw, 38px); margin-top: 8px; font-weight: 500; }
+.sectionTitle { composes: display; font-size: clamp(26px, 3.6vw, 38px); margin-top: 8px; }
 .sectionHead { margin-bottom: 36px; }
 
 /* Promotions */
@@ -74,23 +109,36 @@
 .promoCard {
   border: 1px solid color-mix(in srgb, var(--c-primary) 30%, transparent);
   background: color-mix(in srgb, var(--c-primary) 6%, var(--c-bg));
-  border-radius: 16px; padding: 22px;
+  border-radius: var(--radius-lg); padding: 22px;
 }
-.promoTitle { font-weight: 700; font-size: 16px; color: var(--c-primary); font-family: var(--font-body); }
+.promoTitle { font-weight: 700; font-size: 16px; color: var(--c-primary); }
 .promoBody { margin-top: 6px; font-size: 14px; opacity: 0.85; white-space: pre-wrap; }
 
-/* Services */
-.serviceList { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 40px; }
-@media (max-width: 720px) { .serviceList { grid-template-columns: 1fr; } }
+/* Services — three treatments */
+.serviceListDotted { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 40px; }
+@media (max-width: 720px) { .serviceListDotted { grid-template-columns: 1fr; } }
 .serviceRow { display: flex; align-items: baseline; gap: 10px; padding: 14px 0; border-bottom: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent); }
 .serviceName { font-weight: 600; font-size: 15.5px; }
 .serviceDots { flex: 1; border-bottom: 1.5px dotted color-mix(in srgb, var(--c-ink) 25%, transparent); transform: translateY(-4px); }
 .servicePrice { font-weight: 700; color: var(--c-primary); white-space: nowrap; }
 .serviceNote { font-size: 13px; opacity: 0.65; margin-top: 3px; }
 
+.serviceCards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.serviceCard {
+  border: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent);
+  background: color-mix(in srgb, var(--c-bg) 70%, transparent);
+  border-radius: var(--radius-lg); padding: 20px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+}
+.serviceCard .servicePrice { display: inline-block; margin-top: 10px; padding: 3px 12px; border-radius: 999px; background: color-mix(in srgb, var(--c-primary) 12%, var(--c-bg)); }
+
+.serviceRows { display: grid; gap: 0; max-width: 760px; }
+.serviceRows .serviceRow { padding: 16px 0; }
+.serviceRows .servicePrice { margin-left: auto; }
+
 /* Gallery */
 .galleryGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-.galleryItem { border-radius: 14px; overflow: hidden; position: relative; }
+.galleryItem { border-radius: calc(var(--radius-img) * 0.7); overflow: hidden; position: relative; }
 .galleryImg { width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform 0.3s ease; }
 .galleryItem:hover .galleryImg { transform: scale(1.03); }
 .galleryCaption {
@@ -116,7 +164,7 @@
 .reviewGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 .reviewCard {
   background: var(--c-bg); border: 1px solid color-mix(in srgb, var(--c-ink) 9%, transparent);
-  border-radius: 16px; padding: 24px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04); margin: 0;
 }
 .stars { color: var(--c-accent); letter-spacing: 2px; font-size: 14px; }
 .reviewQuote { margin-top: 10px; font-size: 15px; }
@@ -149,12 +197,13 @@
 .hoursTable td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
 .hoursClosed { opacity: 0.55; }
 .hoursToday td { font-weight: 700; color: var(--c-primary); }
-.socialRow { display: flex; gap: 14px; margin-top: 18px; }
+.socialRow { display: flex; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
 .socialRow a { font-size: 13.5px; text-decoration: none; border-bottom: 1px solid currentColor; opacity: 0.75; }
 
 /* Book band */
-.bookBand { text-align: center; padding: 72px 24px; background: var(--c-ink); color: var(--c-bg); }
-.bookBandTitle { font-size: clamp(26px, 4vw, 40px); font-weight: 500; }
+.bookBand { text-align: center; padding: calc(var(--section-pad) + 8px) 24px; background: var(--c-ink); color: var(--c-bg); }
+.page[data-mode='dark'] .bookBand { background: color-mix(in srgb, var(--c-primary) 22%, var(--c-bg)); color: var(--c-ink); }
+.bookBandTitle { composes: display; font-size: clamp(26px, 4vw, 40px); }
 .bookBandSub { opacity: 0.75; margin-top: 10px; }
 .bookBand .cta { margin-top: 26px; }
 

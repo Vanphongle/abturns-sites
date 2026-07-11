@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getSiteData, getSitePreview, DAY_KEYS } from '@/lib/siteData'
-import { resolveTheme } from '@/themes/registry'
+import { resolveSelection } from '@/themes/catalog'
+import { getPalette, resolveTokens } from '@/lib/palettes'
+import ThemeSite from '@/themes/ThemeSite'
 
 // ISR — content edits in the ABTurns Website app show within a minute,
 // matching the promise the admin UI makes. Preview requests (?preview=token)
@@ -10,18 +12,24 @@ export const revalidate = 60
 
 interface Props {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ preview?: string }>
+  searchParams: Promise<{ preview?: string; theme?: string; variation?: string; palette?: string }>
 }
 
 async function resolve(props: Props) {
   const { slug } = await props.params
-  const { preview } = await props.searchParams
+  const { preview, theme, variation, palette } = await props.searchParams
   const tenant = decodeURIComponent(slug)
   if (preview) {
     // Drafts render ONLY via the token capability (slug + secret must match).
-    return { site: await getSitePreview(tenant.replace(/^~/, ''), preview), isPreview: true }
+    // Theme/variation/palette overrides are PREVIEW-ONLY (the builder's live
+    // previews of unsaved selections) — public URLs stay ISR-cacheable.
+    return {
+      site: await getSitePreview(tenant.replace(/^~/, ''), preview),
+      isPreview: true,
+      overrides: { theme, variation, palette },
+    }
   }
-  return { site: await getSiteData(tenant), isPreview: false }
+  return { site: await getSiteData(tenant), isPreview: false, overrides: {} as { theme?: string; variation?: string; palette?: string } }
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -47,10 +55,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function SitePage(props: Props) {
-  const { site, isPreview } = await resolve(props)
+  const { site, isPreview, overrides } = await resolve(props)
   if (!site) notFound()
 
-  const Theme = resolveTheme(site.settings.theme)
+  const selection = resolveSelection(overrides.theme ?? site.themeId, overrides.variation ?? site.variationId)
+  const paletteId = overrides.palette ?? site.paletteId ?? selection.theme.defaultPaletteId
+  const tokens = resolveTokens(getPalette(paletteId), selection.variation.mode)
 
   // schema.org LocalBusiness — each salon's OWN search identity (their name,
   // their address, their hours). No ABTurns anywhere.
@@ -90,7 +100,7 @@ export default async function SitePage(props: Props) {
       ) : (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       )}
-      <Theme site={site} />
+      <ThemeSite site={site} selection={selection} tokens={tokens} />
     </>
   )
 }
