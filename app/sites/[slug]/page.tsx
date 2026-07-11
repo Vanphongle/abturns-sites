@@ -1,26 +1,40 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getSiteData, DAY_KEYS } from '@/lib/siteData'
+import { getSiteData, getSitePreview, DAY_KEYS } from '@/lib/siteData'
 import { resolveTheme } from '@/themes/registry'
 
 // ISR — content edits in the ABTurns Website app show within a minute,
-// matching the promise the admin UI makes.
+// matching the promise the admin UI makes. Preview requests (?preview=token)
+// read searchParams and therefore render dynamically, uncached.
 export const revalidate = 60
 
 interface Props {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ preview?: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
-  const site = await getSiteData(decodeURIComponent(slug))
+async function resolve(props: Props) {
+  const { slug } = await props.params
+  const { preview } = await props.searchParams
+  const tenant = decodeURIComponent(slug)
+  if (preview) {
+    // Drafts render ONLY via the token capability (slug + secret must match).
+    return { site: await getSitePreview(tenant.replace(/^~/, ''), preview), isPreview: true }
+  }
+  return { site: await getSiteData(tenant), isPreview: false }
+}
+
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const { site, isPreview } = await resolve(props)
   if (!site) return { title: 'Not found', robots: { index: false } }
   const s = site.settings
   const title = s.seo_title || site.name
   const description = s.seo_description || s.hero_description || `${site.name} — book your visit today.`
   return {
-    title,
+    title: isPreview ? `[Preview] ${title}` : title,
     description,
+    // Draft previews must never be indexed.
+    ...(isPreview ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       title,
       description,
@@ -32,9 +46,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function SitePage({ params }: Props) {
-  const { slug } = await params
-  const site = await getSiteData(decodeURIComponent(slug))
+export default async function SitePage(props: Props) {
+  const { site, isPreview } = await resolve(props)
   if (!site) notFound()
 
   const Theme = resolveTheme(site.settings.theme)
@@ -63,7 +76,20 @@ export default async function SitePage({ params }: Props) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {isPreview ? (
+        <div
+          style={{
+            position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 1000, background: '#221c17', color: '#faf7f3',
+            padding: '10px 20px', borderRadius: 999, fontSize: 13, fontWeight: 600,
+            boxShadow: '0 6px 24px rgba(0,0,0,0.3)', fontFamily: 'var(--font-body)',
+          }}
+        >
+          Draft preview — this page is not public yet
+        </div>
+      ) : (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      )}
       <Theme site={site} />
     </>
   )

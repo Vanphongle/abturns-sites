@@ -203,3 +203,63 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
     hours: parseHours(settings.hours_struct),
   }
 }
+
+// ---------------------------------------------------------------------------
+// Draft preview — the (slug, token) capability path. The SECURITY DEFINER RPC
+// returns the full payload regardless of is_published; holding the preview
+// URL IS the credential (tokens are per-site uuids, unreadable by anon).
+// ---------------------------------------------------------------------------
+
+interface PreviewPayload {
+  site: {
+    shop_id: string | null
+    slug: string
+    name: string
+    domain: string | null
+    booking_code: string | null
+    is_published: boolean
+    settings: SiteSettings
+  }
+  gallery: Array<{ image_url: string; alt: string; caption: string | null }>
+  promotions: Array<{ title: string; body: string }>
+  faqs: Array<{ question: string; answer: string }>
+  reviews: Array<{ author: string; quote: string; rating: number }>
+  menu: Array<{ name: string; description: string; price_text: string }>
+  services: Array<{ name: string; price: number | null; website_note: string | null }>
+  team: Array<{ name: string; photo_url: string | null; website_bio: string | null }>
+}
+
+export async function getSitePreview(slug: string, token: string): Promise<SiteData | null> {
+  // Guard the uuid shape locally so garbage tokens never hit the RPC.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) return null
+  const { data, error } = await supabase.rpc('get_website_preview', { p_slug: slug, p_token: token })
+  if (error || !data) return null
+  const p = data as unknown as PreviewPayload
+
+  const linkedServices = (p.services ?? []).map((s) => ({
+    name: s.name,
+    priceText: priceTextFromNumber(s.price),
+    note: s.website_note,
+  }))
+  const menuServices = (p.menu ?? []).map((m) => ({
+    name: m.name,
+    priceText: m.price_text || '',
+    note: m.description || null,
+  }))
+  const bookingBase = (process.env.NEXT_PUBLIC_BOOKING_BASE || '').replace(/\/$/, '')
+
+  return {
+    name: p.site.name,
+    slug: p.site.slug,
+    domain: p.site.domain,
+    bookingUrl: p.site.booking_code && bookingBase ? `${bookingBase}/${p.site.booking_code}` : null,
+    settings: p.site.settings ?? {},
+    services: linkedServices.length > 0 ? linkedServices : menuServices,
+    team: (p.team ?? []).map((t) => ({ name: t.name, photoUrl: t.photo_url, bio: t.website_bio })),
+    gallery: (p.gallery ?? []).map((g) => ({ imageUrl: g.image_url, alt: g.alt || '', caption: g.caption })),
+    promotions: p.promotions ?? [],
+    faqs: p.faqs ?? [],
+    reviews: p.reviews ?? [],
+    hours: parseHours((p.site.settings ?? {}).hours_struct),
+  }
+}
