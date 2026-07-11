@@ -2,12 +2,13 @@
   "name": "abturns-sites",
   "version": "0.1.0",
   "private": true,
-  "description": "Multi-tenant renderer for ABTurns customer marketing sites — one deployment serves every salon's website from the CMS.",
+  "description": "Multi-tenant renderer for ABTurns customer marketing sites \u2014 one deployment serves every salon's website from the CMS.",
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
     "start": "next start -p 3002",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:check": "NEXT_DIST_DIR=.next-check next build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
