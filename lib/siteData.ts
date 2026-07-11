@@ -132,6 +132,63 @@ function priceTextFromNumber(price: number | null): string {
   return `$${Number(price) % 1 === 0 ? Number(price).toFixed(0) : Number(price).toFixed(2)}`
 }
 
+// ---------------------------------------------------------------------------
+// Canonical shop block (the UNIFY decision, docs/website-builder/00-ARCH…):
+// identity / hours / socials come from the shops row — the site renders them,
+// never re-stores them. `settings.*` duplicates remain as FALLBACK ONLY.
+// Published path reads the `website_shop_info` view (published shops only);
+// draft previews get the same block inside get_website_preview.
+// ---------------------------------------------------------------------------
+
+export interface CanonicalShop {
+  name: string | null
+  shop_address: string | null
+  shop_phone: string | null
+  shop_hours: Record<string, DayHours> | null
+  logo_url: string | null
+  google_url: string | null
+  yelp_url: string | null
+  instagram_url: string | null
+  facebook_url: string | null
+  booking_code: string | null
+  public_booking_enabled: boolean | null
+}
+
+function hoursFromCanonical(raw: Record<string, DayHours> | null | undefined): SiteData['hours'] {
+  if (!raw) return null
+  const out = {} as Record<DayKey, DayHours>
+  for (const day of DAY_KEYS) {
+    const d = raw[day]
+    if (!d || typeof d.open !== 'string' || typeof d.close !== 'string') return null
+    out[day] = { open: d.open, close: d.close, closed: !!d.closed }
+  }
+  return out
+}
+
+/** Canonical-first, settings-fallback merge. Returns the effective settings
+ *  object the themes read plus the resolved name/hours. */
+function mergeCanonical(settings: SiteSettings, shop: CanonicalShop | null) {
+  if (!shop) {
+    return { settings, name: null as string | null, hours: parseHours(settings.hours_struct) }
+  }
+  const merged: SiteSettings = {
+    ...settings,
+    address: shop.shop_address || settings.address,
+    phone: shop.shop_phone || settings.phone,
+    instagram: shop.instagram_url || settings.instagram,
+    facebook: shop.facebook_url || settings.facebook,
+    yelp: shop.yelp_url || settings.yelp,
+    logo_url: shop.logo_url || settings.logo_url,
+    google_maps_url: shop.google_url || settings.google_maps_url,
+    google_review_url: shop.google_url || settings.google_review_url,
+  }
+  return {
+    settings: merged,
+    name: shop.name || null,
+    hours: hoursFromCanonical(shop.shop_hours) ?? parseHours(settings.hours_struct),
+  }
+}
+
 /**
  * Resolve + assemble a site. `tenant` is a slug, or '~hostname' for a
  * custom-domain lookup (see middleware). Returns null when the site doesn't
@@ -145,14 +202,14 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
 
   let query = supabase
     .from('websites')
-    .select('id, shop_id, slug, name, domain, booking_code, is_published, settings')
+    .select('id, shop_id, slug, name, domain, booking_code, is_published, settings, theme_id, variation_id, palette')
   query = byDomain ? query.eq('domain', value) : query.eq('slug', value)
   const { data: site, error } = await query.maybeSingle()
   if (error || !site) return null
 
   const settings = (site.settings ?? {}) as SiteSettings
 
-  const [galleryRes, promoRes, faqRes, reviewRes, menuRes, svcRes, teamRes] = await Promise.all([
+  const [galleryRes, promoRes, faqRes, reviewRes, menuRes, svcRes, teamRes, shopRes] = await Promise.all([
     supabase.from('website_gallery').select('image_url, alt, caption, sort_order').eq('website_id', site.id).order('sort_order'),
     supabase.from('website_promotions').select('title, body, sort_order').eq('website_id', site.id).order('sort_order'),
     supabase.from('website_faqs').select('question, answer, sort_order').eq('website_id', site.id).order('sort_order'),
@@ -165,7 +222,12 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
     site.shop_id
       ? supabase.from('website_team').select('name, photo_url, website_bio, display_order').eq('shop_id', site.shop_id).order('display_order')
       : Promise.resolve({ data: [] as never[] }),
+    site.shop_id
+      ? supabase.from('website_shop_info').select('*').eq('shop_id', site.shop_id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
+
+  const canonical = mergeCanonical(settings, (shopRes.data ?? null) as CanonicalShop | null)
 
   // Linked shop's REAL menu wins; standalone menu items are the fallback.
   const linkedServices = ((svcRes.data ?? []) as Array<{ name: string; price: number | null; website_note: string | null }>).map((s) => ({
@@ -180,16 +242,20 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
   }))
 
   const bookingBase = (process.env.NEXT_PUBLIC_BOOKING_BASE || '').replace(/\/$/, '')
+  const shopInfo = (shopRes.data ?? null) as CanonicalShop | null
+  const canonicalBookingCode = shopInfo?.public_booking_enabled ? shopInfo.booking_code : null
+  const effectiveBookingCode = canonicalBookingCode || site.booking_code
+  const paletteObj = (site as { palette?: { id?: string } | null }).palette
 
   return {
-    name: site.name,
+    name: canonical.name || site.name,
     slug: site.slug,
     domain: site.domain,
-    bookingUrl: site.booking_code && bookingBase ? `${bookingBase}/${site.booking_code}` : null,
-    themeId: settings.theme ?? null,
-    variationId: settings.variation ?? null,
-    paletteId: settings.palette_id ?? null,
-    settings,
+    bookingUrl: effectiveBookingCode && bookingBase ? `${bookingBase}/${effectiveBookingCode}` : null,
+    themeId: (site as { theme_id?: string | null }).theme_id ?? settings.theme ?? null,
+    variationId: (site as { variation_id?: string | null }).variation_id ?? settings.variation ?? null,
+    paletteId: paletteObj?.id ?? settings.palette_id ?? null,
+    settings: canonical.settings,
     services: linkedServices.length > 0 ? linkedServices : menuServices,
     team: ((teamRes.data ?? []) as Array<{ name: string; photo_url: string | null; website_bio: string | null }>).map((t) => ({
       name: t.name,
@@ -208,7 +274,7 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
       quote: r.quote,
       rating: r.rating,
     })),
-    hours: parseHours(settings.hours_struct),
+    hours: canonical.hours,
   }
 }
 
@@ -227,7 +293,11 @@ interface PreviewPayload {
     booking_code: string | null
     is_published: boolean
     settings: SiteSettings
+    theme_id?: string | null
+    variation_id?: string | null
+    palette?: { id?: string } | null
   }
+  shop?: CanonicalShop | null
   gallery: Array<{ image_url: string; alt: string; caption: string | null }>
   promotions: Array<{ title: string; body: string }>
   faqs: Array<{ question: string; answer: string }>
@@ -257,21 +327,24 @@ export async function getSitePreview(slug: string, token: string): Promise<SiteD
   const bookingBase = (process.env.NEXT_PUBLIC_BOOKING_BASE || '').replace(/\/$/, '')
 
   const pSettings = p.site.settings ?? {}
+  const canonical = mergeCanonical(pSettings, p.shop ?? null)
+  const canonicalBookingCode = p.shop?.public_booking_enabled ? p.shop.booking_code : null
+  const effectiveBookingCode = canonicalBookingCode || p.site.booking_code
   return {
-    name: p.site.name,
+    name: canonical.name || p.site.name,
     slug: p.site.slug,
     domain: p.site.domain,
-    bookingUrl: p.site.booking_code && bookingBase ? `${bookingBase}/${p.site.booking_code}` : null,
-    themeId: pSettings.theme ?? null,
-    variationId: pSettings.variation ?? null,
-    paletteId: pSettings.palette_id ?? null,
-    settings: pSettings,
+    bookingUrl: effectiveBookingCode && bookingBase ? `${bookingBase}/${effectiveBookingCode}` : null,
+    themeId: p.site.theme_id ?? pSettings.theme ?? null,
+    variationId: p.site.variation_id ?? pSettings.variation ?? null,
+    paletteId: p.site.palette?.id ?? pSettings.palette_id ?? null,
+    settings: canonical.settings,
     services: linkedServices.length > 0 ? linkedServices : menuServices,
     team: (p.team ?? []).map((t) => ({ name: t.name, photoUrl: t.photo_url, bio: t.website_bio })),
     gallery: (p.gallery ?? []).map((g) => ({ imageUrl: g.image_url, alt: g.alt || '', caption: g.caption })),
     promotions: p.promotions ?? [],
     faqs: p.faqs ?? [],
     reviews: p.reviews ?? [],
-    hours: parseHours((p.site.settings ?? {}).hours_struct),
+    hours: canonical.hours,
   }
 }
