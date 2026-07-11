@@ -17,12 +17,16 @@ export function middleware(req: NextRequest) {
   const url = req.nextUrl
   const { pathname } = url
 
+  // robots.txt / sitemap.xml live at the DOMAIN ROOT for SEO — they must be
+  // resolved per-tenant (below) rather than skipped as static files.
+  const isSeoFile = pathname === '/robots.txt' || pathname === '/sitemap.xml'
+
   // Skip Next internals/static + direct tenant paths.
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/sites') ||
     pathname.startsWith('/favicon') ||
-    pathname.includes('.')
+    (pathname.includes('.') && !isSeoFile)
   ) {
     return NextResponse.next()
   }

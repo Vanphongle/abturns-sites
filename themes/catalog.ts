@@ -23,6 +23,7 @@ export type SectionId =
   | 'announcement'
   | 'hero'
   | 'promotions'
+  | 'philosophy'
   | 'services'
   | 'gallery'
   | 'team'
@@ -59,7 +60,7 @@ export interface ThemeConfig {
 }
 
 const STANDARD_ORDER: SectionId[] = [
-  'announcement', 'hero', 'promotions', 'services', 'gallery', 'team', 'reviews', 'faqs', 'visit', 'bookcta',
+  'announcement', 'hero', 'promotions', 'services', 'gallery', 'philosophy', 'team', 'reviews', 'faqs', 'visit', 'bookcta',
 ]
 
 export const THEME_CATALOG: Record<string, ThemeConfig> = {
@@ -72,13 +73,13 @@ export const THEME_CATALOG: Record<string, ThemeConfig> = {
         label: 'Ivoire',
         fonts: 'serif', density: 'airy', hero: 'arch', services: 'menu', gallery: 'arch',
         radius: 'soft', mode: 'light', stockMood: 'warm',
-        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'promotions', 'reviews', 'team', 'faqs', 'visit', 'bookcta'],
+        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'philosophy', 'promotions', 'reviews', 'team', 'faqs', 'visit', 'bookcta'],
       },
       noir: {
         label: 'Noir',
         fonts: 'serif', density: 'airy', hero: 'arch', services: 'menu', gallery: 'arch',
         radius: 'soft', mode: 'dark', stockMood: 'noir',
-        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'reviews', 'promotions', 'team', 'faqs', 'visit', 'bookcta'],
+        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'philosophy', 'reviews', 'promotions', 'team', 'faqs', 'visit', 'bookcta'],
       },
       blush: {
         label: 'Blush',
@@ -97,13 +98,13 @@ export const THEME_CATALOG: Record<string, ThemeConfig> = {
         label: 'Gallery',
         fonts: 'editorial', density: 'regular', hero: 'editorial', services: 'ledger', gallery: 'masonry',
         radius: 'sharp', mode: 'light', stockMood: 'bright',
-        sectionOrder: ['announcement', 'hero', 'gallery', 'services', 'promotions', 'team', 'reviews', 'faqs', 'visit', 'bookcta'],
+        sectionOrder: ['announcement', 'hero', 'gallery', 'philosophy', 'services', 'promotions', 'team', 'reviews', 'faqs', 'visit', 'bookcta'],
       },
       mode: {
         label: 'Mode',
         fonts: 'editorial', density: 'regular', hero: 'editorial', services: 'ledger', gallery: 'masonry',
         radius: 'sharp', mode: 'dark', stockMood: 'noir',
-        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'reviews', 'promotions', 'team', 'faqs', 'visit', 'bookcta'],
+        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'philosophy', 'reviews', 'promotions', 'team', 'faqs', 'visit', 'bookcta'],
       },
       linen: {
         label: 'Linen',
@@ -122,13 +123,13 @@ export const THEME_CATALOG: Record<string, ThemeConfig> = {
         label: 'Azure',
         fonts: 'geo', density: 'airy', hero: 'veil', services: 'cards', gallery: 'film',
         radius: 'round', mode: 'light', stockMood: 'serene',
-        sectionOrder: ['announcement', 'hero', 'promotions', 'services', 'gallery', 'team', 'reviews', 'faqs', 'visit', 'bookcta'],
+        sectionOrder: ['announcement', 'hero', 'promotions', 'services', 'gallery', 'philosophy', 'team', 'reviews', 'faqs', 'visit', 'bookcta'],
       },
       dusk: {
         label: 'Dusk',
         fonts: 'geo', density: 'airy', hero: 'veil', services: 'cards', gallery: 'film',
         radius: 'round', mode: 'dark', stockMood: 'serene',
-        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'reviews', 'promotions', 'team', 'faqs', 'visit', 'bookcta'],
+        sectionOrder: ['announcement', 'hero', 'services', 'gallery', 'philosophy', 'reviews', 'promotions', 'team', 'faqs', 'visit', 'bookcta'],
       },
       sable: {
         label: 'Sable',

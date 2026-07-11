@@ -31,6 +31,15 @@ export interface SiteSettings {
   signature_price?: string
   seo_title?: string
   seo_description?: string
+  /** AI-written content layer (generate-content route). Arrays/objects ride
+   *  as JSON strings so SiteSettings stays a flat string map. */
+  ticker_json?: string
+  philosophy_kicker?: string
+  philosophy_statement?: string
+  philosophy_em?: string
+  philosophy_pillars_json?: string
+  booking_policy?: string
+  ai_copy_generated_at?: string
   og_image_url?: string
   google_maps_url?: string
   google_review_url?: string

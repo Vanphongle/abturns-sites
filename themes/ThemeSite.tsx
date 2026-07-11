@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { SiteData, DayKey } from '@/lib/siteData'
+import type { SiteData, DayKey, DayHours } from '@/lib/siteData'
 import { DAY_KEYS } from '@/lib/siteData'
 import type { ThemeSelection, SectionId } from './catalog'
 import type { PaletteTokens } from '@/lib/palettes'
@@ -24,6 +24,42 @@ function fmtTime(hhmm: string): string {
   const suffix = h >= 12 ? 'PM' : 'AM'
   const hour12 = h % 12 === 0 ? 12 : h % 12
   return m ? `${hour12}:${String(m).padStart(2, '0')} ${suffix}` : `${hour12} ${suffix}`
+}
+
+/** Safe JSON-array parse for settings fields that ride as JSON strings. */
+function parseJsonArray<T>(raw: string | undefined): T[] {
+  if (!raw) return []
+  try {
+    const v = JSON.parse(raw)
+    return Array.isArray(v) ? (v as T[]) : []
+  } catch {
+    return []
+  }
+}
+
+interface HourRow { label: string; value: string; closed: boolean; isToday: boolean }
+
+/** Collapse consecutive days with identical hours ("Monday — Friday"). */
+function groupHours(hours: Record<DayKey, DayHours>): HourRow[] {
+  const todayKey = DAY_KEYS[(new Date().getDay() + 6) % 7]
+  const sig = (d: DayHours) => (d.closed ? 'closed' : `${d.open}|${d.close}`)
+  const rows: HourRow[] = []
+  let start = 0
+  for (let i = 1; i <= DAY_KEYS.length; i++) {
+    if (i === DAY_KEYS.length || sig(hours[DAY_KEYS[i]]) !== sig(hours[DAY_KEYS[start]])) {
+      const a = DAY_KEYS[start]
+      const b = DAY_KEYS[i - 1]
+      const d = hours[a]
+      rows.push({
+        label: a === b ? DAY_LABELS[a] : `${DAY_LABELS[a]} — ${DAY_LABELS[b]}`,
+        value: d.closed ? 'Closed' : `${fmtTime(d.open)} – ${fmtTime(d.close)}`,
+        closed: d.closed,
+        isToday: (DAY_KEYS.slice(start, i) as DayKey[]).includes(todayKey),
+      })
+      start = i
+    }
+  }
+  return rows
 }
 
 interface GalleryImage {
@@ -74,12 +110,17 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       : stock.sides.map((p) => ({ imageUrl: p.src, alt: p.alt, caption: null, w: p.w, h: p.h })) as [GalleryImage, GalleryImage]
   const isStockGallery = site.gallery.length === 0
   const galleryItems: GalleryImage[] = isStockGallery
-    ? stock.gallery.map((p) => ({ imageUrl: p.src, alt: p.alt, caption: null, w: p.w, h: p.h }))
+    ? stock.gallery.map((p) => ({ imageUrl: p.src, alt: p.alt, caption: p.label ?? null, w: p.w, h: p.h }))
     : site.gallery
+
+  // AI-written content layer (arrays ride as JSON strings in settings).
+  const ticker = parseJsonArray<string>(st.ticker_json).filter((t) => typeof t === 'string' && t.trim())
+  const pillars = parseJsonArray<{ title?: string; body?: string }>(st.philosophy_pillars_json)
+    .filter((p) => p && typeof p.title === 'string')
+  const hourRows = site.hours ? groupHours(site.hours) : []
 
   const bookHref = site.bookingUrl || (st.phone ? `tel:${st.phone.replace(/[^+\d]/g, '')}` : null)
   const bookLabel = site.bookingUrl ? 'Book now' : st.phone ? 'Call to book' : null
-  const todayKey = DAY_KEYS[(new Date().getDay() + 6) % 7]
 
   const nav: Array<{ id: string; label: string; show: boolean }> = [
     { id: 'services', label: 'Services', show: site.services.length > 0 },
@@ -95,16 +136,47 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
     ) : null,
 
     hero: (
-      <Hero
-        key="hero"
-        site={site}
-        heroImage={heroImage}
-        heroSides={heroSides}
-        bookHref={bookHref}
-        bookLabel={bookLabel}
-        heroStyle={v.hero}
-      />
+      <div key="hero">
+        <Hero
+          site={site}
+          heroImage={heroImage}
+          heroSides={heroSides}
+          bookHref={bookHref}
+          bookLabel={bookLabel}
+          heroStyle={v.hero}
+        />
+        {ticker.length > 0 && (
+          <div className={s.ticker} aria-label="Specialties">
+            {ticker.slice(0, 6).map((t, i) => (
+              <span key={i} className={s.tickerItem}>{t}</span>
+            ))}
+          </div>
+        )}
+      </div>
     ),
+
+    philosophy: st.philosophy_statement ? (
+      <section key="philosophy" className={s.philoBand}>
+        <div className={`${s.container} ${s.section}`}>
+          <Reveal>
+            <div className={s.philoKicker}>{st.philosophy_kicker || 'Our philosophy'}</div>
+            <h2 className={s.philoStatement}>
+              {st.philosophy_statement} {st.philosophy_em && <em>{st.philosophy_em}</em>}
+            </h2>
+            {pillars.length > 0 && (
+              <div className={s.pillars}>
+                {pillars.slice(0, 3).map((p, i) => (
+                  <div key={i} className={s.pillar}>
+                    <div className={s.pillarTitle}>{p.title}</div>
+                    {p.body && <p className={s.pillarBody}>{p.body}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Reveal>
+        </div>
+      </section>
+    ) : null,
 
     promotions: site.promotions.length > 0 ? (
       <section key="promotions" className={s.sectionAlt}>
@@ -226,8 +298,9 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
         <div className={`${s.container} ${s.section}`}>
           <Reveal>
             <SectionHead kicker="Come see us" title={`Visit ${site.name}`} />
-            <div className={s.visitGrid}>
+            <div className={`${s.visitGrid} ${st.booking_policy && bookHref ? s.visitGridPolicy : ''}`}>
               <div>
+                <div className={s.visitColHead}>Find us</div>
                 <div className={s.contactList}>
                   {st.phone && (
                     <a className={s.contactPhone} href={`tel:${st.phone.replace(/[^+\d]/g, '')}`}>{st.phone}</a>
@@ -250,23 +323,28 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
                 )}
               </div>
               <div>
+                <div className={s.visitColHead}>Hours</div>
                 {st.holiday_hours && <div className={s.holiday}>{st.holiday_hours}</div>}
-                {site.hours && (
+                {hourRows.length > 0 && (
                   <table className={s.hoursTable}>
                     <tbody>
-                      {DAY_KEYS.map((day) => {
-                        const d = site.hours![day]
-                        return (
-                          <tr key={day} className={`${d.closed ? s.hoursClosed : ''} ${day === todayKey ? s.hoursToday : ''}`}>
-                            <td>{DAY_LABELS[day]}</td>
-                            <td>{d.closed ? 'Closed' : `${fmtTime(d.open)} – ${fmtTime(d.close)}`}</td>
-                          </tr>
-                        )
-                      })}
+                      {hourRows.map((row) => (
+                        <tr key={row.label} className={`${row.closed ? s.hoursClosed : ''} ${row.isToday ? s.hoursToday : ''}`}>
+                          <td>{row.label}</td>
+                          <td>{row.value}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 )}
               </div>
+              {st.booking_policy && bookHref && (
+                <div className={s.policyCard}>
+                  <div className={s.policyTitle}>Ready when you are.</div>
+                  <p className={s.policyBody}>{st.booking_policy}</p>
+                  <a href={bookHref} className={s.cta}>{bookLabel}</a>
+                </div>
+              )}
             </div>
           </Reveal>
         </div>

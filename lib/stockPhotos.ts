@@ -29,6 +29,8 @@ export interface StockPhoto {
   alt: string
   w: number
   h: number
+  /** Short chip label shown on gallery cards ("Soft almond"). */
+  label?: string
 }
 
 export interface StockSet {
@@ -39,7 +41,7 @@ export interface StockSet {
   gallery: StockPhoto[]
 }
 
-const P = (src: string, alt: string, w: number, h: number): StockPhoto => ({ src: `/stock/${src}.webp`, alt, w, h })
+const P = (src: string, alt: string, w: number, h: number, label?: string): StockPhoto => ({ src: `/stock/${src}.webp`, alt, w, h, label })
 
 const warmHero = P('red-almond-closeup', 'Classic red manicure, almond shape', 1120, 1400)
 const noirHero = P('noir-glove-polish', 'Manicurist applying red polish', 933, 1400)
@@ -50,31 +52,31 @@ export const STOCK_SETS: Record<StockMood, StockSet> = {
   warm: {
     hero: warmHero,
     sides: [
-      P('blush-tip-swatches', 'Choosing a soft pink shade', 933, 1400),
+      P('blush-tip-swatches', 'Choosing a soft pink shade', 933, 1400, 'Pick your shade'),
       P('gold-tub-candles', 'Spa bath with candles and gold details', 933, 1400),
     ],
     gallery: [
-      P('red-manicure-towel', 'Fresh red manicure', 933, 1400),
-      P('mauve-nails-soft', 'Soft mauve manicure', 1400, 933),
-      P('blush-tip-swatches', 'Choosing a soft pink shade', 933, 1400),
-      P('gold-tub-candles', 'Spa bath with candles', 933, 1400),
-      P('pink-pedicure-care', 'Pedicure care in soft pink', 933, 1400),
-      P('swatch-fan-pick', 'Browsing nail shades', 933, 1400),
+      P('red-manicure-towel', 'Fresh red manicure', 933, 1400, 'Classic red'),
+      P('mauve-nails-soft', 'Soft mauve manicure', 1400, 933, 'Soft mauve'),
+      P('blush-tip-swatches', 'Choosing a soft pink shade', 933, 1400, 'Pick your shade'),
+      P('gold-tub-candles', 'Spa bath with candles', 933, 1400, 'Unwind'),
+      P('pink-pedicure-care', 'Pedicure care in soft pink', 933, 1400, 'Gentle care'),
+      P('swatch-fan-pick', 'Browsing nail shades', 933, 1400, 'Every color'),
     ],
   },
   noir: {
     hero: noirHero,
     sides: [
-      P('mono-salon-interior', 'Modern salon interior', 915, 1400),
+      P('mono-salon-interior', 'Modern salon interior', 915, 1400, 'The studio'),
       P('uv-lamp-glow', 'Gel manicure curing under UV light', 933, 1400),
     ],
     gallery: [
-      P('mono-salon-interior', 'Modern salon interior', 915, 1400),
-      P('noir-uv-station', 'Manicure station at work', 933, 1400),
-      P('noir-glove-detail', 'Precision detail work', 933, 1400),
-      P('uv-lamp-glow', 'Gel curing under UV light', 933, 1400),
-      P('noir-artist-brush', 'Nail artist at work', 933, 1400),
-      P('black-polish-plinth', 'Matte black polish', 787, 1400),
+      P('mono-salon-interior', 'Modern salon interior', 915, 1400, 'The studio'),
+      P('noir-uv-station', 'Manicure station at work', 933, 1400, 'At work'),
+      P('noir-glove-detail', 'Precision detail work', 933, 1400, 'Detail work'),
+      P('uv-lamp-glow', 'Gel curing under UV light', 933, 1400, 'Gel cure'),
+      P('noir-artist-brush', 'Nail artist at work', 933, 1400, 'Hand-painted'),
+      P('black-polish-plinth', 'Matte black polish', 787, 1400, 'Matte black'),
     ],
   },
   bright: {
@@ -84,27 +86,27 @@ export const STOCK_SETS: Record<StockMood, StockSet> = {
       P('swatch-wheel-color', 'Color swatch wheel', 933, 1400),
     ],
     gallery: [
-      P('black-polish-plinth', 'Matte black polish', 787, 1400),
-      P('swatch-wheel-color', 'Choosing from the color wheel', 933, 1400),
-      P('lime-art-nails', 'Playful nail art', 1400, 933),
-      P('mono-salon-interior', 'Modern salon interior', 915, 1400),
-      P('red-manicure-towel', 'Fresh red manicure', 933, 1400),
-      P('swatch-fan-pick', 'Browsing nail shades', 933, 1400),
+      P('black-polish-plinth', 'Matte black polish', 787, 1400, 'Matte black'),
+      P('swatch-wheel-color', 'Choosing from the color wheel', 933, 1400, 'The wheel'),
+      P('lime-art-nails', 'Playful nail art', 1400, 933, 'Nail art'),
+      P('mono-salon-interior', 'Modern salon interior', 915, 1400, 'The studio'),
+      P('red-manicure-towel', 'Fresh red manicure', 933, 1400, 'Classic red'),
+      P('swatch-fan-pick', 'Browsing nail shades', 933, 1400, 'Every color'),
     ],
   },
   serene: {
     hero: sereneHero,
     sides: [
-      P('pink-pedicure-care', 'Pedicure care in soft pink', 933, 1400),
-      P('hammam-amber-glow', 'Warm candle-lit spa room', 933, 1400),
+      P('pink-pedicure-care', 'Pedicure care in soft pink', 933, 1400, 'Gentle care'),
+      P('hammam-amber-glow', 'Warm candle-lit spa room', 933, 1400, 'The ritual'),
     ],
     gallery: [
-      P('hammam-amber-glow', 'Warm candle-lit spa room', 933, 1400),
-      P('pink-pedicure-care', 'Pedicure care in soft pink', 933, 1400),
-      P('mauve-nails-soft', 'Soft mauve manicure', 1400, 933),
-      P('gold-tub-candles', 'Spa bath with candles', 933, 1400),
-      P('swatch-fan-pick', 'Browsing nail shades', 933, 1400),
-      P('blush-tip-swatches', 'Choosing a soft pink shade', 933, 1400),
+      P('hammam-amber-glow', 'Warm candle-lit spa room', 933, 1400, 'The ritual'),
+      P('pink-pedicure-care', 'Pedicure care in soft pink', 933, 1400, 'Gentle care'),
+      P('mauve-nails-soft', 'Soft mauve manicure', 1400, 933, 'Soft mauve'),
+      P('gold-tub-candles', 'Spa bath with candles', 933, 1400, 'Unwind'),
+      P('swatch-fan-pick', 'Browsing nail shades', 933, 1400, 'Every color'),
+      P('blush-tip-swatches', 'Choosing a soft pink shade', 933, 1400, 'Pick your shade'),
     ],
   },
 }
