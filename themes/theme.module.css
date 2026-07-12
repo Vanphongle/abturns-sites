@@ -278,7 +278,9 @@
 .pillarBody { margin-top: 8px; font-size: 14px; line-height: 1.65; opacity: 0.75; }
 
 /* --- Sections shared -------------------------------------------------------- */
-.section { padding: var(--section-pad) 0; }
+/* Longhands on purpose: .section often shares a div with .container, and
+   the shorthand would wipe the container's horizontal 28px (mobile bug). */
+.section { padding-top: var(--section-pad); padding-bottom: var(--section-pad); }
 .sectionAlt { background: var(--c-soft); }
 .kicker {
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.26em;
