@@ -112,6 +112,8 @@ export interface SiteData {
   basePath: string
   /** Published journal posts (drives the Journal nav link). */
   postsCount: number
+  /** Latest published posts, shown as the homepage Journal section. */
+  latestPosts: Array<{ slug: string; title: string; excerpt: string | null; publishedAt: string | null }>
   bookingUrl: string | null
   /** Builder selection. Sourced from websites.theme_id/variation_id/palette
    *  once Phase 3 wires the reads; until then settings-key fallback only. */
@@ -244,7 +246,7 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
     site.shop_id
       ? supabase.from('website_shop_info').select('*').eq('shop_id', site.shop_id).maybeSingle()
       : Promise.resolve({ data: null }),
-    supabase.from('website_posts').select('id', { count: 'exact', head: true }).eq('website_id', site.id).eq('is_published', true),
+    supabase.from('website_posts').select('slug, title, excerpt, published_at', { count: 'exact' }).eq('website_id', site.id).eq('is_published', true).order('published_at', { ascending: false, nullsFirst: false }).limit(3),
   ])
 
   const canonical = mergeCanonical(settings, (shopRes.data ?? null) as CanonicalShop | null)
@@ -277,6 +279,12 @@ export async function getSiteData(tenant: string): Promise<SiteData | null> {
     domain: site.domain,
     basePath: byDomain ? '' : `/sites/${site.slug}`,
     postsCount: ('count' in postCountRes ? postCountRes.count : 0) ?? 0,
+    latestPosts: ((postCountRes.data ?? []) as Array<{ slug: string; title: string; excerpt: string | null; published_at: string | null }>).map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt,
+      publishedAt: p.published_at,
+    })),
     bookingUrl: effectiveBookingCode && bookingBase ? `${bookingBase}/${effectiveBookingCode}` : null,
     themeId: (site as { theme_id?: string | null }).theme_id ?? settings.theme ?? null,
     variationId: (site as { variation_id?: string | null }).variation_id ?? settings.variation ?? null,
@@ -331,6 +339,8 @@ interface PreviewPayload {
   menu: Array<{ name: string; description: string; price_text: string }>
   services: Array<{ name: string; price: number | null; website_note: string | null; category?: string | null; category_order?: number | null }>
   team: Array<{ name: string; photo_url: string | null; website_bio: string | null }>
+  posts?: Array<{ slug: string; title: string; excerpt: string | null; published_at: string | null }>
+  posts_count?: number
 }
 
 export async function getSitePreview(slug: string, token: string): Promise<SiteData | null> {
@@ -365,7 +375,12 @@ export async function getSitePreview(slug: string, token: string): Promise<SiteD
     slug: p.site.slug,
     domain: p.site.domain,
     basePath: `/sites/${p.site.slug}`,
-    postsCount: 0,
+    // The Journal renders in previews too; its links only WORK once the site
+    // is published (blog routes are public-only), so gate on that.
+    postsCount: p.site.is_published ? (p.posts_count ?? 0) : 0,
+    latestPosts: p.site.is_published
+      ? (p.posts ?? []).map((x) => ({ slug: x.slug, title: x.title, excerpt: x.excerpt, publishedAt: x.published_at }))
+      : [],
     bookingUrl: effectiveBookingCode && bookingBase ? `${bookingBase}/${effectiveBookingCode}` : null,
     themeId: p.site.theme_id ?? pSettings.theme ?? null,
     variationId: p.site.variation_id ?? pSettings.variation ?? null,

@@ -298,6 +298,33 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       </section>
     ) : null,
 
+    journal: site.latestPosts.length > 0 ? (
+      <section key="journal" id="journal" className={s.section}>
+        <div className={s.container}>
+          <Reveal>
+            <SectionHead kicker="Notes from the salon" title="From the journal" />
+            <div className={s.journalGrid}>
+              {site.latestPosts.map((p) => (
+                <a key={p.slug} href={`${site.basePath}/blog/${p.slug}`} className={s.postCard}>
+                  {p.publishedAt && (
+                    <div className={s.postDate}>
+                      {new Date(p.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </div>
+                  )}
+                  <h3 className={s.postTitle}>{p.title}</h3>
+                  {p.excerpt && <p className={s.postExcerpt}>{p.excerpt}</p>}
+                  <span className={s.postMore}>Read on</span>
+                </a>
+              ))}
+            </div>
+            <p className={s.journalAll}>
+              <a href={`${site.basePath}/blog`} className={s.textLink}>Visit the journal</a>
+            </p>
+          </Reveal>
+        </div>
+      </section>
+    ) : null,
+
     visit: (
       <section key="visit" id="visit" className={s.sectionAlt}>
         <div className={`${s.container} ${s.section}`}>

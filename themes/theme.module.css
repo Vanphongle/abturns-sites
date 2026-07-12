@@ -575,3 +575,9 @@
 .prose li { margin-bottom: 8px; opacity: 0.88; }
 .prose a { color: var(--c-primary); }
 .prose strong { font-weight: 700; }
+
+
+/* Homepage journal section */
+.journalGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.journalAll { margin-top: 26px; }
+.page[data-theme='maison'] .journalAll, .page[data-theme='riviera'] .journalAll { text-align: center; }
