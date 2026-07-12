@@ -128,6 +128,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
     { id: 'gallery', label: 'Gallery', show: true },
     { id: 'team', label: 'Team', show: site.team.length > 0 },
     { id: 'reviews', label: 'Reviews', show: site.reviews.length > 0 },
+    { id: 'faqs', label: 'Q&A', show: site.faqs.length > 0 },
     { id: 'visit', label: 'Visit', show: true },
   ]
   const blogHref = site.postsCount > 0 ? `${site.basePath}/blog` : null
@@ -280,7 +281,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
     ) : null,
 
     faqs: site.faqs.length > 0 ? (
-      <section key="faqs" className={s.section}>
+      <section key="faqs" id="faqs" className={s.section}>
         <div className={s.container}>
           <Reveal>
             <SectionHead kicker="Good to know" title="Questions, answered" />
@@ -403,12 +404,17 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
 
       <footer className={s.footer}>
         <div className={s.footerName}>{site.name}</div>
-        {(st.instagram || st.facebook || st.yelp || blogHref) && (
+        <div className={s.footerNav}>
+          {nav.filter((n) => n.show).map((n) => (
+            <a key={n.id} href={`#${n.id}`}>{n.label}</a>
+          ))}
+          {blogHref && <a href={blogHref}>Journal</a>}
+        </div>
+        {(st.instagram || st.facebook || st.yelp) && (
           <div className={s.footerSocial}>
             {st.instagram && <a href={st.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>}
             {st.facebook && <a href={st.facebook} target="_blank" rel="noopener noreferrer">Facebook</a>}
             {st.yelp && <a href={st.yelp} target="_blank" rel="noopener noreferrer">Yelp</a>}
-            {blogHref && <a href={blogHref}>Journal</a>}
           </div>
         )}
         <div className={s.footerCopy}>© {new Date().getFullYear()} {site.name}. All rights reserved.</div>

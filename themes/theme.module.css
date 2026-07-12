@@ -528,10 +528,16 @@
 /* --- Footer — the salon's own site: no platform branding, no backlinks. ----------------- */
 .footer { padding: 46px 24px 40px; text-align: center; border-top: 1px solid var(--c-hairline); }
 .footerName { composes: display; font-size: 19px; }
+.footerNav { display: flex; gap: 8px 22px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+.footerNav a {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
+  text-decoration: none; color: inherit; opacity: 0.66;
+}
+.footerNav a:hover { opacity: 1; }
 .footerSocial { display: flex; gap: 20px; justify-content: center; margin-top: 14px; }
 .footerSocial a {
-  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
-  text-decoration: none; color: inherit; opacity: 0.62;
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em;
+  text-decoration: none; color: var(--c-primary); opacity: 0.85;
 }
 .footerSocial a:hover { opacity: 1; }
 .footerCopy { font-size: 12px; opacity: 0.45; margin-top: 16px; }
