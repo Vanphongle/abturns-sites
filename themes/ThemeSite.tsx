@@ -5,6 +5,7 @@ import type { ThemeSelection, SectionId } from './catalog'
 import type { PaletteTokens } from '@/lib/palettes'
 import { getStockSet } from '@/lib/stockPhotos'
 import Reveal from './Reveal'
+import EditOverlay from './EditOverlay'
 import MobileNav from './MobileNav'
 import s from './theme.module.css'
 
@@ -75,6 +76,8 @@ interface ThemeSiteProps {
   site: SiteData
   selection: ThemeSelection
   tokens: PaletteTokens
+  /** Token-gated preview inside the POS editor iframe (?edit=1). */
+  editMode?: boolean
 }
 
 /**
@@ -91,7 +94,7 @@ interface ThemeSiteProps {
  * and a stock gallery is headed "The experience", never "Our work".
  * No platform branding or backlinks — the site is entirely the salon's own.
  */
-export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
+export default function ThemeSite({ site, selection, tokens, editMode }: ThemeSiteProps) {
   const st = site.settings
   const v = selection.variation
   const vars = {
@@ -135,7 +138,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
 
   const sections: Record<SectionId, React.ReactNode> = {
     announcement: st.announcement ? (
-      <div key="announcement" className={s.announce}>{st.announcement}</div>
+      <div key="announcement" className={s.announce} data-edit="announcement">{st.announcement}</div>
     ) : null,
 
     hero: (
@@ -149,7 +152,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
           heroStyle={v.hero}
         />
         {ticker.length > 0 && (
-          <div className={s.ticker} aria-label="Specialties">
+          <div className={s.ticker} aria-label="Specialties" data-edit="ticker">
             <div className={s.tickerTrack}>
               {[...ticker.slice(0, 6), ...ticker.slice(0, 6)].map((t, i) => (
                 <span key={i} className={s.tickerItem} aria-hidden={i >= Math.min(ticker.length, 6) || undefined}>{t}</span>
@@ -164,14 +167,14 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       <section key="philosophy" className={s.philoBand}>
         <div className={`${s.container} ${s.section}`}>
           <Reveal>
-            <div className={s.philoKicker}>{st.philosophy_kicker || 'Our philosophy'}</div>
-            <h2 className={s.philoStatement}>
+            <div className={s.philoKicker} data-edit="philosophy">{st.philosophy_kicker || 'Our philosophy'}</div>
+            <h2 className={s.philoStatement} data-edit="philosophy">
               {st.philosophy_statement} {st.philosophy_em && <em>{st.philosophy_em}</em>}
             </h2>
             {pillars.length > 0 && (
               <div className={s.pillars}>
                 {pillars.slice(0, 3).map((p, i) => (
-                  <div key={i} className={s.pillar}>
+                  <div key={i} className={s.pillar} data-edit={`pillar:${i}`}>
                     <div className={s.pillarTitle}>{p.title}</div>
                     {p.body && <p className={s.pillarBody}>{p.body}</p>}
                   </div>
@@ -187,6 +190,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       <section key="promotions" className={s.sectionAlt}>
         <div className={`${s.container} ${s.section}`}>
           <Reveal>
+            <div data-edit="tab:promotions">
             <SectionHead kicker="Right now" title="Current offers" />
             <div className={s.promoGrid}>
               {site.promotions.map((p, i) => (
@@ -197,6 +201,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
                 </div>
               ))}
             </div>
+            </div>
           </Reveal>
         </div>
       </section>
@@ -204,7 +209,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
 
     services: site.services.length > 0 ? (
       <section key="services" id="services" className={s.section}>
-        <div className={s.container}>
+        <div className={s.container} data-edit="tab:services">
           <Reveal>
             <SectionHead kicker="The menu" title="Services" />
             <Services services={site.services} styleAxis={v.services} />
@@ -222,7 +227,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
               kicker={isStockGallery ? 'Step inside' : 'Our work'}
               title={isStockGallery ? 'The experience' : 'Gallery'}
             />
-            <Gallery items={galleryItems} styleAxis={v.gallery} siteName={site.name} />
+            <Gallery items={galleryItems} styleAxis={v.gallery} siteName={site.name} isStock={isStockGallery} />
           </Reveal>
         </div>
       </section>
@@ -232,6 +237,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       <section key="team" id="team" className={s.section}>
         <div className={s.container}>
           <Reveal>
+            <div data-edit="tab:team">
             <SectionHead kicker="The people" title="Meet the team" />
             <div className={s.teamGrid}>
               {site.team.map((m, i) => (
@@ -247,6 +253,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
                 </div>
               ))}
             </div>
+            </div>
           </Reveal>
         </div>
       </section>
@@ -256,6 +263,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       <section key="reviews" id="reviews" className={s.sectionAlt}>
         <div className={`${s.container} ${s.section}`}>
           <Reveal>
+            <div data-edit="tab:reviews">
             <SectionHead kicker="Kind words" title="What clients say" />
             <div className={s.reviewGrid}>
               {site.reviews.map((r, i) => (
@@ -275,6 +283,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
                 </a>
               </p>
             )}
+            </div>
           </Reveal>
         </div>
       </section>
@@ -284,6 +293,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       <section key="faqs" id="faqs" className={s.section}>
         <div className={s.container}>
           <Reveal>
+            <div data-edit="tab:faqs">
             <SectionHead kicker="Good to know" title="Questions, answered" />
             <div className={s.faq}>
               {site.faqs.map((f, i) => (
@@ -292,6 +302,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
                   <p className={s.faqAnswer}>{f.answer}</p>
                 </details>
               ))}
+            </div>
             </div>
           </Reveal>
         </div>
@@ -302,6 +313,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       <section key="journal" id="journal" className={s.section}>
         <div className={s.container}>
           <Reveal>
+            <div data-edit="tab:blog">
             <SectionHead kicker="Notes from the salon" title="From the journal" />
             <div className={s.journalGrid}>
               {site.latestPosts.map((p) => (
@@ -320,6 +332,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
             <p className={s.journalAll}>
               <a href={`${site.basePath}/blog`} className={s.textLink}>Visit the journal</a>
             </p>
+            </div>
           </Reveal>
         </div>
       </section>
@@ -371,7 +384,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
                 )}
               </div>
               {st.booking_policy && bookHref && (
-                <div className={s.policyCard}>
+                <div className={s.policyCard} data-edit="booking">
                   <div className={s.policyTitle}>{st.booking_title || 'Plan your visit'}</div>
                   <p className={s.policyBody}>{st.booking_policy}</p>
                   <a href={bookHref} className={s.cta}>{bookLabel}</a>
@@ -388,9 +401,9 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
         <Reveal>
           <div className={s.bookBandOrnament} aria-hidden />
           {st.closing_line
-            ? <h2 className={s.bookBandTitle}>{st.closing_line}</h2>
-            : <h2 className={s.bookBandTitle}>Ready when <em>you</em> are.</h2>}
-          <p className={s.bookBandSub}>{st.closing_sub || `Reserve your visit at ${site.name}.`}</p>
+            ? <h2 className={s.bookBandTitle} data-edit="closing">{st.closing_line}</h2>
+            : <h2 className={s.bookBandTitle} data-edit="closing">Ready when <em>you</em> are.</h2>}
+          <p className={s.bookBandSub} data-edit="closing">{st.closing_sub || `Reserve your visit at ${site.name}.`}</p>
           <a href={bookHref} className={`${s.cta} ${s.ctaLarge}`}>{bookLabel}</a>
         </Reveal>
       </section>
@@ -407,6 +420,7 @@ export default function ThemeSite({ site, selection, tokens }: ThemeSiteProps) {
       data-radius={v.radius}
       data-mode={v.mode}
     >
+      {editMode && <EditOverlay />}
       <header className={s.header}>
         <div className={`${s.container} ${s.headerRow}`}>
           <a href="#" className={s.brand}>
@@ -495,11 +509,11 @@ function Hero({
   const heroLine2 = st.hero_line2 || 'every detail.'
 
   const title = (
-    <h1 className={s.heroTitle}>
+    <h1 className={s.heroTitle} data-edit="hero">
       {heroLine1} <em>{heroLine2}</em>
     </h1>
   )
-  const desc = st.hero_description && <p className={s.heroDesc}>{st.hero_description}</p>
+  const desc = st.hero_description && <p className={s.heroDesc} data-edit="hero">{st.hero_description}</p>
   const actions = (
     <div className={s.heroActions}>
       {bookHref && <a href={bookHref} className={`${s.cta} ${s.ctaLarge}`}>{bookLabel}</a>}
@@ -527,7 +541,7 @@ function Hero({
             <div className={`${s.archFrame} ${s.archSide}`}>
               <Img img={heroSides[0]} className={s.archImg} />
             </div>
-            <div className={`${s.archFrame} ${s.archCenter}`}>
+            <div className={`${s.archFrame} ${s.archCenter}`} data-edit="hero-image">
               <Img img={heroImage} className={s.archImg} eager />
               {signature}
             </div>
@@ -550,7 +564,7 @@ function Hero({
             {desc}
             {actions}
           </div>
-          <div className={s.heroEdMedia}>
+          <div className={s.heroEdMedia} data-edit="hero-image">
             <Img img={heroImage} className={s.heroEdImg} eager />
             {signature}
           </div>
@@ -562,7 +576,7 @@ function Hero({
   if (heroStyle === 'veil') {
     return (
       <section className={s.heroVeil}>
-        <div className={s.heroVeilMedia}>
+        <div className={s.heroVeilMedia} data-edit="hero-image">
           <Img img={heroImage} className={s.heroVeilImg} eager />
         </div>
         <div className={s.heroVeilCard}>
@@ -583,7 +597,7 @@ function Hero({
           {desc}
           {actions}
         </div>
-        <div className={s.heroImageWrap}>
+        <div className={s.heroImageWrap} data-edit="hero-image">
           <Img img={heroImage} className={s.heroImage} eager />
           {signature}
         </div>
@@ -703,12 +717,12 @@ function Services({ services, styleAxis }: { services: SiteData['services']; sty
 // Gallery — three treatments.
 // ---------------------------------------------------------------------------
 
-function Gallery({ items, styleAxis, siteName }: { items: GalleryImage[]; styleAxis: 'arch' | 'masonry' | 'film'; siteName: string }) {
+function Gallery({ items, styleAxis, siteName, isStock }: { items: GalleryImage[]; styleAxis: 'arch' | 'masonry' | 'film'; siteName: string; isStock?: boolean }) {
   const cls = styleAxis === 'masonry' ? s.galleryMasonry : styleAxis === 'film' ? s.galleryFilm : s.galleryArches
   return (
     <div className={cls}>
       {items.map((g, i) => (
-        <figure key={i} className={s.galleryItem}>
+        <figure key={i} className={s.galleryItem} data-edit={isStock ? 'gallery:stock' : `gallery:${i}`}>
           <Img img={{ ...g, alt: g.alt || `${siteName} — gallery ${i + 1}` }} className={s.galleryImg} />
           {g.caption && <figcaption className={s.galleryCaption}>{g.caption}</figcaption>}
         </figure>

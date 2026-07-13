@@ -13,12 +13,12 @@ export const revalidate = 60
 
 interface Props {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ preview?: string; theme?: string; variation?: string; palette?: string }>
+  searchParams: Promise<{ preview?: string; theme?: string; variation?: string; palette?: string; edit?: string }>
 }
 
 async function resolve(props: Props) {
   const { slug } = await props.params
-  const { preview, theme, variation, palette } = await props.searchParams
+  const { preview, theme, variation, palette, edit } = await props.searchParams
   const tenant = decodeURIComponent(slug)
   if (preview) {
     // Drafts render ONLY via the token capability (slug + secret must match).
@@ -27,10 +27,11 @@ async function resolve(props: Props) {
     return {
       site: await getSitePreview(tenant.replace(/^~/, ''), preview),
       isPreview: true,
+      editMode: edit === '1',
       overrides: { theme, variation, palette },
     }
   }
-  return { site: await getSiteData(tenant), isPreview: false, overrides: {} as { theme?: string; variation?: string; palette?: string } }
+  return { site: await getSiteData(tenant), isPreview: false, editMode: false, overrides: {} as { theme?: string; variation?: string; palette?: string } }
 }
 
 /** The site's canonical public URL: custom domain first, else the shared
@@ -84,7 +85,7 @@ function priceRange(services: Array<{ priceText: string }>): string | null {
 }
 
 export default async function SitePage(props: Props) {
-  const { site, isPreview, overrides } = await resolve(props)
+  const { site, isPreview, editMode, overrides } = await resolve(props)
   if (!site) notFound()
 
   const selection = resolveSelection(overrides.theme ?? site.themeId, overrides.variation ?? site.variationId)
@@ -151,7 +152,7 @@ export default async function SitePage(props: Props) {
   return (
     <>
       {isPreview ? (
-        <div
+        !editMode && <div
           style={{
             position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)',
             zIndex: 1000, background: '#221c17', color: '#faf7f3',
@@ -169,7 +170,7 @@ export default async function SitePage(props: Props) {
           )}
         </>
       )}
-      <ThemeSite site={site} selection={selection} tokens={tokens} />
+      <ThemeSite site={site} selection={selection} tokens={tokens} editMode={isPreview && editMode} />
     </>
   )
 }
